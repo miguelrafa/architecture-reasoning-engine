@@ -1,0 +1,22 @@
+{
+  "name": "architecture-reasoning-engine",
+  "version": "1.0.0",
+  "description": "A constrained service that receives a free-text architecture description and a \"what if\" question, builds a formal model, and returns results backed by deterministic computation.",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miguelrafa/architecture-reasoning-engine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/miguelrafa/architecture-reasoning-engine/issues"
+  },
+  "homepage": "https://github.com/miguelrafa/architecture-reasoning-engine#readme"
+}
