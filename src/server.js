@@ -7,6 +7,10 @@ import express from 'express';
 
 import { reasonAboutArchitecture } from './reasoningEngine.js';
 
+const publicDirectory = fileURLToPath(
+  new URL('../public', import.meta.url)
+);
+
 /**
  * Creates the HTTP application.
  *
@@ -24,6 +28,9 @@ export function createApp({
   // Architecture descriptions are small text documents. The limit prevents
   // unexpectedly large requests from consuming excessive memory or tokens.
   app.use(express.json({ limit: '100kb' }));
+
+ // Serves the browser interface and its local static assets.
+  app.use(express.static(publicDirectory));
 
   /**
    * Lightweight health endpoint.

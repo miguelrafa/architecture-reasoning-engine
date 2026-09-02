@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <meta
+      name="description"
+      content="Deterministic what-if analysis for software architectures."
+    />
+
+    <title>Architecture Reasoning Engine</title>
+
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+
+  <body>
+    <header class="page-header">
+      <div class="header-content">
+        <p class="eyebrow">AI-assisted · Deterministic calculations</p>
+
+        <h1>Architecture Reasoning Engine</h1>
+
+        <p class="header-description">
+          Describe a software architecture and ask a supported what-if
+          question. The language model structures the input; application code
+          validates the model and calculates the result.
+        </p>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <section class="panel input-panel" aria-labelledby="analysis-heading">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">Step 1</p>
+            <h2 id="analysis-heading">Describe and question</h2>
+          </div>
+
+          <button id="load-example-button" class="secondary-button" type="button">
+            Load example
+          </button>
+        </div>
+
+        <form id="analysis-form">
+          <label for="description">Architecture description</label>
+
+          <textarea
+            id="description"
+            name="description"
+            rows="9"
+            required
+            placeholder="Describe services, dependencies, timeouts, retries, replicas, capacity, data stores, load, and targets."
+          ></textarea>
+
+          <p class="field-help">
+            Missing information is allowed. The engine will expose it rather
+            than silently inventing values.
+          </p>
+
+          <label for="question">What-if question</label>
+
+          <textarea
+            id="question"
+            name="question"
+            rows="3"
+            required
+            placeholder="For example: What happens if the order service becomes unavailable?"
+          ></textarea>
+
+          <p class="field-help">
+            Supported scenarios: component unavailability, latency degradation,
+            and incoming-load multiplication.
+          </p>
+
+          <div class="form-actions">
+            <button id="analyze-button" class="primary-button" type="submit">
+              Analyze architecture
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="request-status"
+          class="request-status"
+          role="status"
+          aria-live="polite"
+        ></div>
+      </section>
+
+      <section
+        id="results-section"
+        class="results"
+        aria-labelledby="results-heading"
+        hidden
+      >
+        <div class="section-heading">
+          <div>
+            <p class="step-label">Step 2</p>
+            <h2 id="results-heading">Computed result</h2>
+          </div>
+
+          <span id="result-status" class="status-badge"></span>
+        </div>
+
+        <article class="panel result-summary">
+          <h3>Answer</h3>
+
+          <p id="result-explanation" class="result-explanation"></p>
+
+          <div class="result-grid">
+            <div>
+              <h4>Root cause</h4>
+              <p id="root-cause">Not applicable</p>
+            </div>
+
+            <div>
+              <h4>Affected components</h4>
+              <ul id="affected-components" class="compact-list"></ul>
+            </div>
+          </div>
+
+          <div>
+            <h4>Visible assumptions</h4>
+            <ul id="result-assumptions" class="compact-list"></ul>
+          </div>
+        </article>
+
+        <section class="metrics-grid" aria-label="Request telemetry">
+          <article class="metric-card">
+            <span class="metric-label">Total latency</span>
+            <strong id="total-latency">—</strong>
+          </article>
+
+          <article class="metric-card">
+            <span class="metric-label">Total tokens</span>
+            <strong id="total-tokens">—</strong>
+          </article>
+
+          <article class="metric-card">
+            <span class="metric-label">Estimated request cost</span>
+            <strong id="request-cost">—</strong>
+          </article>
+
+          <article class="metric-card">
+            <span class="metric-label">Estimated cost / 1,000</span>
+            <strong id="thousand-request-cost">—</strong>
+          </article>
+        </section>
+
+        <section class="details-grid">
+          <details class="panel">
+            <summary>Formal architecture model</summary>
+            <pre id="model-json"></pre>
+          </details>
+
+          <details class="panel">
+            <summary>Semantic validation</summary>
+            <pre id="validation-json"></pre>
+          </details>
+
+          <details class="panel">
+            <summary>Interpreted scenario</summary>
+            <pre id="scenario-json"></pre>
+          </details>
+
+          <details class="panel">
+            <summary>Request telemetry</summary>
+            <pre id="telemetry-json"></pre>
+          </details>
+        </section>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>
+        AI semantically interprets the user's natural-language description and converts it into a formal architecture model. Validation, scenario analysis, and all calculations are then performed by deterministic application code.
+      </p>
+    </footer>
+  </body>
+</html>
