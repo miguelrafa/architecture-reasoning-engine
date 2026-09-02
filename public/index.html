@@ -152,6 +152,81 @@
           </article>
         </section>
 
+        <section
+          class="panel model-workspace"
+          aria-labelledby="model-workspace-heading"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="step-label">Step 3</p>
+              <h2 id="model-workspace-heading">Inspect and version the model</h2>
+            </div>
+
+            <span id="model-version-badge" class="model-version-badge">
+              Not saved
+            </span>
+          </div>
+
+          <p class="workspace-description">
+            Review or edit the formal JSON produced by semantic
+            interpretation. Saving an edit creates a new version and preserves
+            the previous version.
+          </p>
+
+          <div class="model-metadata">
+            <div>
+              <span class="metric-label">Stored model ID</span>
+              <code id="stored-model-id">Not saved</code>
+            </div>
+
+            <div>
+              <span class="metric-label">Current version</span>
+              <strong id="stored-model-version">—</strong>
+            </div>
+          </div>
+
+          <label for="model-editor">Formal model JSON</label>
+
+          <textarea
+            id="model-editor"
+            class="model-editor"
+            rows="18"
+            spellcheck="false"
+            aria-describedby="model-editor-help"
+          ></textarea>
+
+          <p id="model-editor-help" class="field-help">
+            The JSON must continue to satisfy the formal architecture schema.
+          </p>
+
+          <div class="model-actions">
+            <button
+              id="save-model-button"
+              class="primary-button"
+              type="button"
+              disabled
+            >
+              Save model
+            </button>
+
+            <button
+              id="save-version-button"
+              class="secondary-button"
+              type="button"
+              disabled
+            >
+              Save new version
+            </button>
+          </div>
+
+          <div
+            id="model-storage-status"
+            class="request-status"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </section>
+
         <section class="details-grid">
           <details class="panel">
             <summary>Formal architecture model</summary>

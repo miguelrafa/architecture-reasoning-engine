@@ -24,9 +24,27 @@ const validationJson = document.querySelector('#validation-json');
 const scenarioJson = document.querySelector('#scenario-json');
 const telemetryJson = document.querySelector('#telemetry-json');
 
+const modelVersionBadge = document.querySelector(
+  '#model-version-badge'
+);
+const storedModelId = document.querySelector('#stored-model-id');
+const storedModelVersion = document.querySelector(
+  '#stored-model-version'
+);
+const modelEditor = document.querySelector('#model-editor');
+const saveModelButton = document.querySelector('#save-model-button');
+const saveVersionButton = document.querySelector(
+  '#save-version-button'
+);
+const modelStorageStatus = document.querySelector(
+  '#model-storage-status'
+);
+
+let currentStoredModelId = null;
+
 /**
  * Example with enough information to exercise extraction, validation,
- * deterministic failure propagation, and telemetry.
+ * deterministic failure propagation, persistence, and telemetry.
  */
 const exampleDescription = [
   'A checkout API receives 50 requests per second.',
@@ -92,12 +110,120 @@ function formatJson(value) {
 function extractErrorMessage(payload, fallbackMessage) {
   if (Array.isArray(payload?.errors) && payload.errors.length > 0) {
     return payload.errors
-      .map((error) => error.message)
+      .map((error) => {
+        const location = error.field ?? error.path;
+        return location
+          ? `${location}: ${error.message}`
+          : error.message;
+      })
       .filter(Boolean)
       .join(' ');
   }
 
   return payload?.message ?? fallbackMessage;
+}
+
+/**
+ * Sends an HTTP request and translates error responses into exceptions that
+ * can be displayed consistently by the interface.
+ */
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, options);
+
+  let payload;
+
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error('The server returned an unreadable response.');
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      extractErrorMessage(payload, 'The request could not be completed.')
+    );
+  }
+
+  return payload;
+}
+
+/**
+ * Enables only the persistence operation that is valid for the current model.
+ */
+function updatePersistenceButtons({ busy = false } = {}) {
+  const hasEditableModel = modelEditor.value.trim() !== '';
+
+  saveModelButton.disabled =
+    busy || !hasEditableModel || currentStoredModelId !== null;
+
+  saveVersionButton.disabled =
+    busy || currentStoredModelId === null;
+}
+
+/**
+ * Resets persistence metadata when a new model has been extracted.
+ */
+function resetModelWorkspace(model) {
+  currentStoredModelId = null;
+
+  storedModelId.textContent = 'Not saved';
+  storedModelVersion.textContent = '—';
+
+  modelVersionBadge.textContent = 'Not saved';
+  modelVersionBadge.className = 'model-version-badge';
+
+  modelEditor.value = model ? formatJson(model) : '';
+
+  modelStorageStatus.textContent = model
+    ? 'Review the extracted model before saving it.'
+    : 'No formal model is available to save.';
+
+  modelStorageStatus.className = 'request-status';
+
+  updatePersistenceButtons();
+}
+
+/**
+ * Updates the interface after the repository saves a model version.
+ */
+function applyStoredModel(storedModel) {
+  currentStoredModelId = storedModel.id;
+
+  storedModelId.textContent = storedModel.id;
+  storedModelVersion.textContent = String(storedModel.currentVersion);
+
+  modelVersionBadge.textContent = `Version ${storedModel.version} saved`;
+  modelVersionBadge.className = 'model-version-badge saved';
+
+  modelEditor.value = formatJson(storedModel.model);
+  modelJson.textContent = formatJson(storedModel.model);
+
+  updatePersistenceButtons();
+}
+
+/**
+ * Parses the editable model and rejects invalid JSON before an API request.
+ */
+function readEditedModel() {
+  const content = modelEditor.value.trim();
+
+  if (content === '') {
+    throw new Error('The formal model JSON cannot be empty.');
+  }
+
+  let model;
+
+  try {
+    model = JSON.parse(content);
+  } catch {
+    throw new Error('The formal model contains invalid JSON.');
+  }
+
+  if (model === null || typeof model !== 'object' || Array.isArray(model)) {
+    throw new Error('The formal model must be a JSON object.');
+  }
+
+  return model;
 }
 
 /**
@@ -160,6 +286,8 @@ function renderAnalysis(payload) {
   scenarioJson.textContent = formatJson(payload.scenario);
   telemetryJson.textContent = formatJson(payload.telemetry);
 
+  resetModelWorkspace(payload.model);
+
   resultsSection.hidden = false;
   resultsSection.scrollIntoView({
     behavior: 'smooth',
@@ -170,7 +298,10 @@ function renderAnalysis(payload) {
 loadExampleButton.addEventListener('click', () => {
   descriptionInput.value = exampleDescription;
   questionInput.value = exampleQuestion;
-  requestStatus.textContent = 'Example loaded. You can edit it before analysis.';
+
+  requestStatus.textContent =
+    'Example loaded. You can edit it before analysis.';
+
   requestStatus.className = 'request-status';
   descriptionInput.focus();
 });
@@ -183,12 +314,12 @@ form.addEventListener('submit', async (event) => {
 
   requestStatus.textContent =
     'Structuring the model and calculating the scenario. Please wait.';
-  requestStatus.className = 'request-status';
 
+  requestStatus.className = 'request-status';
   resultsSection.hidden = true;
 
   try {
-    const response = await fetch('/api/analyze', {
+    const payload = await requestJson('/api/analyze', {
       method: 'POST',
       headers: {
         'content-type': 'application/json'
@@ -198,17 +329,6 @@ form.addEventListener('submit', async (event) => {
         question: questionInput.value
       })
     });
-
-    const payload = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        extractErrorMessage(
-          payload,
-          'The architecture request could not be processed.'
-        )
-      );
-    }
 
     renderAnalysis(payload);
 
@@ -224,5 +344,101 @@ form.addEventListener('submit', async (event) => {
   } finally {
     analyzeButton.disabled = false;
     analyzeButton.textContent = 'Analyze architecture';
+  }
+});
+
+saveModelButton.addEventListener('click', async () => {
+  saveModelButton.textContent = 'Saving…';
+  modelStorageStatus.textContent = 'Saving model as version 1…';
+  modelStorageStatus.className = 'request-status';
+
+  updatePersistenceButtons({ busy: true });
+
+  try {
+    const model = readEditedModel();
+
+    const storedModel = await requestJson('/api/models', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model
+      })
+    });
+
+    applyStoredModel(storedModel);
+
+    modelStorageStatus.textContent =
+      'Model saved successfully as version 1.';
+
+    modelStorageStatus.className = 'request-status success';
+  } catch (error) {
+    modelStorageStatus.textContent =
+      error instanceof Error
+        ? error.message
+        : 'The model could not be saved.';
+
+    modelStorageStatus.className = 'request-status error';
+  } finally {
+    saveModelButton.textContent = 'Save model';
+    updatePersistenceButtons();
+  }
+});
+
+saveVersionButton.addEventListener('click', async () => {
+  if (!currentStoredModelId) {
+    return;
+  }
+
+  saveVersionButton.textContent = 'Saving…';
+  modelStorageStatus.textContent = 'Validating and saving a new version…';
+  modelStorageStatus.className = 'request-status';
+
+  updatePersistenceButtons({ busy: true });
+
+  try {
+    const model = readEditedModel();
+
+    const storedModel = await requestJson(
+      `/api/models/${encodeURIComponent(currentStoredModelId)}`,
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          model
+        })
+      }
+    );
+
+    applyStoredModel(storedModel);
+
+    modelStorageStatus.textContent =
+      `Model saved successfully as version ${storedModel.version}.`;
+
+    modelStorageStatus.className = 'request-status success';
+  } catch (error) {
+    modelStorageStatus.textContent =
+      error instanceof Error
+        ? error.message
+        : 'The new model version could not be saved.';
+
+    modelStorageStatus.className = 'request-status error';
+  } finally {
+    saveVersionButton.textContent = 'Save new version';
+    updatePersistenceButtons();
+  }
+});
+
+modelEditor.addEventListener('input', () => {
+  updatePersistenceButtons();
+
+  if (currentStoredModelId) {
+    modelStorageStatus.textContent =
+      'The editor contains unsaved changes. Saving creates a new version.';
+
+    modelStorageStatus.className = 'request-status';
   }
 });
