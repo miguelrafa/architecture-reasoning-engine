@@ -1,177 +1,174 @@
 # Architecture Decisions
 
-**Status:** Work in progress
+**Status:** Accepted
 
-This document records the main architectural forks, the selected options, their rationale, and their accepted consequences.
+This document records the principal architectural decisions, their rationale, the alternatives considered, and their accepted consequences.
 
-## Decision 1: Build a constrained reasoning service, not a general architecture chatbot
+## Decision 1: Constrain the Reasoning Domain
 
 ### Context
 
-The input is written in natural language and may describe different small architectures. However, the engine must produce defensible and testable results without inventing missing information.
-
-A general-purpose architecture chatbot could answer a broad range of questions, but its behavior and calculations would be difficult to constrain and verify.
+Natural-language architecture descriptions can represent an unlimited number of technologies, relationships, and operational questions. An unrestricted architecture assistant could produce plausible answers that are not supported by the available model.
 
 ### Decision
 
-The service will accept different architecture descriptions that fit the formal model, but it will support only three scenario categories:
+The engine supports three explicit scenario categories:
 
 1. component unavailability;
 2. component latency degradation;
-3. incoming load multiplication.
+3. incoming-load multiplication.
 
-Questions outside these categories will return an explicit `NOT_ANSWERABLE` result.
+Questions outside these categories return `NOT_ANSWERABLE`.
 
 ### Rationale
 
-A narrow reasoning domain makes the behavior understandable, deterministic, testable, and appropriate for the three-day time budget.
+A constrained reasoning domain provides clear behavioral boundaries. Each supported scenario has an explicit input schema, answerability rules, and a deterministic implementation.
 
-The natural-language input remains flexible, while the reasoning capabilities are deliberately constrained.
-
-### Rejected Alternative
-
-A general architecture chatbot was rejected because it would encourage plausible but unsupported answers and would make the boundary between language-model interpretation and deterministic computation unclear.
-
-### Consequences
-
-- The system can process unseen component names and architecture descriptions.
-- The system cannot answer every architecture question.
-- Unsupported questions are treated as expected refusals, not system failures.
-- Additional scenario types can be added later as separate deterministic handlers.
-
-## Decision 2: Use the language model for interpretation, not computation
-
-### Context
-
-Natural-language architecture descriptions are ambiguous and cannot be reliably processed with fixed string rules alone. A language model is useful for identifying components, dependencies, call types, declared values, and scenario intent.
-
-However, the case explicitly requires every calculated quantity to come from verifiable code.
-
-### Decision
-
-Microsoft Foundry will be used only to translate:
-
-- the architecture description into structured extraction candidates;
-- the what-if question into one supported scenario type.
-
-Deterministic application code will:
-
-- validate the extracted structure;
-- normalize units;
-- identify missing or contradictory data;
-- apply assumptions;
-- run every formula;
-- calculate blast radius;
-- decide whether the question is answerable;
-- format every quantitative result.
+The engine can still process unseen component names and architecture descriptions as long as they can be represented by the formal model.
 
 ### Rejected Alternative
 
-Allowing the language model to reason about capacity, saturation, availability, latency, or blast radius was rejected because its numerical output would not be reliably testable or reproducible.
+A general-purpose architecture chatbot was rejected because its answers would be difficult to reproduce, validate, and audit.
 
 ### Consequences
 
-- The boundary between probabilistic interpretation and deterministic computation is explicit.
-- Golden tests can run without live model calls.
-- Extraction quality and calculation correctness can be measured separately.
-- The first version will use deterministic response templates to prevent the language model from introducing new numbers.
+* Supported analyses are predictable and testable.
+* Missing information remains visible.
+* Unsupported questions produce explicit refusals.
+* New scenarios require a new schema and deterministic handler.
 
-## Decision 3: Use closed-form formulas and graph traversal
+## Decision 2: Use AI for Interpretation, Not Calculation
 
 ### Context
 
-The engine must analyze graphs of no more than 15 components under steady-state conditions. The required scenarios involve capacity, retry amplification, utilization, saturation, latency thresholds, and dependency impact.
+Natural-language descriptions may use different terminology, units, naming conventions, and sentence structures. Microsoft Foundry is useful for converting this input into structured data.
 
-A discrete-event or Monte Carlo simulation would add implementation and validation complexity that is not required for the supported scenarios.
+Using a language model for numerical reasoning, however, would make calculated results less reproducible.
 
 ### Decision
 
-The engine will use:
+Microsoft Foundry performs two interpretation tasks:
 
-- closed-form formulas for capacity, attempts, effective load, utilization, and saturation;
-- deterministic graph traversal for failure propagation and blast-radius identification;
-- explicit assumptions for behavior that is not fully described.
+* architecture description to formal architecture model;
+* what-if question to formal scenario.
+
+Application code performs:
+
+* structural and semantic validation;
+* answerability decisions;
+* unit normalization;
+* capacity and utilization calculations;
+* retry amplification;
+* timeout evaluation;
+* dependency propagation and blast-radius analysis;
+* token-cost calculation.
+
+### Rationale
+
+This separation establishes a clear trust boundary:
+
+> **AI interprets. Code validates and calculates.**
+
+Every reported quantity can be traced to measured input or deterministic application logic.
 
 ### Rejected Alternative
 
-Monte Carlo and discrete-event simulation were rejected because they would increase complexity, execution cost, and explanation difficulty without improving the three supported scenarios.
+Allowing the language model to calculate capacity, saturation, timeout impact, or blast radius was rejected because those results would be harder to test and reproduce.
 
 ### Consequences
 
-- Every result can be derived by hand.
-- The mathematical behavior is easy to test with golden cases.
-- The model assumes steady state.
-- The engine will not model detailed request timing, traffic distributions, queueing theory, or recovery over time.
+* Interpretation and calculation can be evaluated independently.
+* Deterministic tests do not require live Foundry calls.
+* Language-model variability cannot change the mathematical formulas.
+* Invalid or incomplete models are refused instead of being silently completed.
 
-## Decision 4: Use a minimal JavaScript stack
-
-### Context
-
-The company's production stack includes TypeScript, NestJS, Drizzle, Postgres, OpenTelemetry, and Next.js. Using that complete stack could be advantageous for a production platform, but it would add framework and infrastructure complexity unrelated to the core reasoning problem.
-
-The solution must remain understandable and modifiable during the live defense.
-
-### Decision
-
-The implementation will use:
-
-- Node.js with plain JavaScript;
-- Express for a small HTTP API;
-- Zod for explicit schema validation;
-- the OpenAI-compatible SDK for Microsoft Foundry;
-- plain HTML, CSS, and browser JavaScript for the minimal UI;
-- JSON files for persisted models and request traces;
-- the built-in Node.js test runner for deterministic tests.
-
-### Rejected Alternative
-
-A full TypeScript, NestJS, Postgres, OpenTelemetry, and Next.js implementation was rejected for this version because it would increase setup, code volume, and live-modification difficulty without improving the core reasoning engine.
-
-### Consequences
-
-- The project has fewer moving parts and dependencies.
-- The complete flow remains easy to navigate during the defense.
-- The implementation is appropriate for a single-user technical demonstration.
-- A production evolution would require stronger typing, durable storage, distributed tracing, authentication, and operational controls.
-
-## Decision 5: Docker Compose is the required runtime; Azure Container Apps is an additional demo deployment
+## Decision 3: Use Closed-Form Formulas and Graph Traversal
 
 ### Context
 
-The required deliverable must run with `docker compose up` on a clean machine. A public Azure deployment is useful for demonstration, but it must not replace or complicate the reproducible local runtime.
+The supported scenarios operate on small architecture graphs under steady-state assumptions. They require capacity, retry, utilization, saturation, timeout, and dependency-impact calculations.
+
+A time-dependent simulation engine would introduce additional model requirements and operational complexity.
 
 ### Decision
 
-The same application container will be used in two environments:
+The engine uses:
 
-- Docker Compose for the required local and evaluator runtime;
-- Azure Container Apps Consumption for an additional public demonstration URL.
+* closed-form formulas for capacity, attempts, effective load, utilization, and saturation;
+* threshold comparisons for timeout evaluation;
+* deterministic reverse graph traversal for failure propagation;
+* explicit missing-information rules when a calculation cannot be completed safely.
 
-Azure Container Apps will use zero minimum replicas to minimize Student Subscription costs. Deployment will be performed manually with Azure CLI, without CI/CD or GitHub Actions.
+### Rationale
+
+These techniques are sufficient for the supported scenarios and make every result explainable by hand.
 
 ### Rejected Alternatives
 
-A virtual machine, Azure Kubernetes Service, and a permanent App Service plan were rejected because they add fixed cost or operational complexity that is unnecessary for a single-container demonstration.
+Monte Carlo and discrete-event simulation were rejected because they require traffic distributions, queue behavior, timing models, and repeated execution that are outside the current formal model.
 
 ### Consequences
 
-- The required deliverable remains independent from Azure availability.
-- The Azure deployment provides a convenient public demo.
-- Local JSON persistence is durable through a Docker bind mount.
-- Container-local files in Azure are ephemeral and may be lost after a restart; durable Azure storage is deliberately out of scope.
-- The local Docker runtime remains the presentation fallback.
+* Results are reproducible.
+* Formulas can be covered by focused unit tests.
+* The engine assumes steady-state behavior.
+* Queue depth, recovery over time, and probabilistic traffic are not modeled.
+* Asynchronous dependencies do not automatically propagate unavailability.
+
+## Decision 4: Use a Minimal Containerized JavaScript Stack with Immutable Versioning
+
+### Context
+
+The core value of the system is the reasoning boundary and its deterministic behavior. A large framework and infrastructure stack would add operational components without changing that core.
+
+The formal architecture model must also remain inspectable and reusable after the initial language-model extraction.
+
+### Decision
+
+The implementation uses:
+
+* Node.js with plain JavaScript;
+* Express for the HTTP API;
+* Zod for explicit schema validation;
+* the OpenAI-compatible client for Microsoft Foundry;
+* plain HTML, CSS, and browser JavaScript;
+* a local JSON repository for architecture models;
+* immutable model versions;
+* the built-in Node.js test runner;
+* Docker Compose as the portable runtime.
+
+A stored model version can be selected and analyzed with a new question without repeating architecture extraction.
+
+### Rationale
+
+This stack keeps the system easy to inspect, run, test, and extend. Immutable versions preserve the exact model used for each analysis and provide a simple audit history.
+
+### Rejected Alternatives
+
+A full TypeScript, NestJS, database, distributed tracing, and frontend-framework implementation was not selected because it would add infrastructure and code volume without improving the deterministic reasoning core.
+
+Mutable version history and version deletion through the interface were rejected because they would weaken traceability.
+
+### Consequences
+
+* The complete application runs as one container.
+* Docker Compose provides a repeatable local runtime.
+* Stored models survive container recreation through a named volume.
+* Historical versions remain immutable.
+* JSON persistence is appropriate for local and self-hosted single-instance use.
+* Multi-user or multi-replica operation would require durable database storage and concurrency control.
 
 ## What Breaks at 10x Scope
 
-The current design is intentionally optimized for a small graph, a single user, and three deterministic scenario types.
+The current architecture is optimized for small graphs, a focused reasoning domain, and a single application instance.
 
-At 10x scope:
+At significantly larger scale:
 
-- larger and more detailed descriptions would increase extraction latency, token usage, and ambiguity;
-- JSON file persistence would not safely support concurrent users or multiple container replicas;
-- the simple formal model would need richer concepts such as regions, fallback behavior, load balancing, queue depth, and service-level objectives;
-- closed-form steady-state formulas would become insufficient for dynamic traffic, queueing, and recovery behavior;
-- local request traces would need centralized observability;
-- the plain JavaScript codebase would benefit from TypeScript and stronger module boundaries.
+* longer descriptions would increase interpretation latency, token usage, and ambiguity;
+* JSON persistence would not safely support concurrent writers or multiple replicas;
+* the formal model would require concepts such as regions, fallback behavior, load balancing, queue depth, and service-level objectives;
+* steady-state formulas would be insufficient for dynamic traffic and recovery behavior;
+* request telemetry would require centralized observability;
+* authentication, authorization, tenant isolation, and retention policies would become necessary.
 
-A production evolution would introduce durable database storage, versioned model migrations, centralized tracing, authentication, concurrency controls, and potentially discrete-event simulation for scenarios that require time-dependent behavior.
+A larger-scale evolution would introduce durable database storage, model migrations, concurrency controls, centralized tracing, managed secrets, and additional simulation strategies while preserving the separation between AI interpretation and deterministic computation.

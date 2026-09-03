@@ -1,6 +1,6 @@
 # Formal Model and Mathematics
 
-**Status:** Work in progress  
+**Status:** Implemented and validated
 **Schema version:** 1.0
 
 ## Purpose
@@ -74,7 +74,7 @@ Missing numeric values are represented as `null`. They are never replaced by inv
 | `callType` | `sync` or `async` | Yes |
 | `timeoutMs` | Configured timeout in milliseconds | No |
 | `retries` | Retry count after the initial attempt | No |
-| `backoff` | `none`, `fixed`, `exponential`, or `unknown` | No |
+| `backoff` | `none`, `fixed`, `linear`, `exponential`, or `unknown` | No |
 | `required` | Whether failure of the dependency blocks the caller | Yes |
 
 ### Workload Fields
