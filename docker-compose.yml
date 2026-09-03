@@ -1,0 +1,38 @@
+services:
+  architecture-reasoning-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: architecture-reasoning-engine
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env
+
+    environment:
+      PORT: "3000"
+      MODEL_STORE_PATH: "/app/data/models.json"
+
+    volumes:
+      - architecture-model-data:/app/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/health').then(response => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    restart: unless-stopped
+
+volumes:
+  architecture-model-data:

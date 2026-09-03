@@ -1,0 +1,15 @@
+node_modules
+data
+tests
+coverage
+
+.git
+.github
+.vscode
+
+.env
+.env.*
+npm-debug.log*
+
+*.md
+*.pdf
