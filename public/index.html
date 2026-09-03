@@ -27,8 +27,8 @@
 
         <p class="header-description">
           Describe a software architecture and ask a supported what-if
-          question. The language model structures the input; application code
-          validates the model and calculates the result.
+          question, or reuse a previously saved model version for a new
+          analysis.
         </p>
       </div>
     </header>
@@ -37,11 +37,15 @@
       <section class="panel input-panel" aria-labelledby="analysis-heading">
         <div class="section-heading">
           <div>
-            <p class="step-label">Step 1</p>
+            <p class="step-label">New architecture</p>
             <h2 id="analysis-heading">Describe and question</h2>
           </div>
 
-          <button id="load-example-button" class="secondary-button" type="button">
+          <button
+            id="load-example-button"
+            class="secondary-button"
+            type="button"
+          >
             Load example
           </button>
         </div>
@@ -79,13 +83,108 @@
 
           <div class="form-actions">
             <button id="analyze-button" class="primary-button" type="submit">
-              Analyze architecture
+              Analyze new architecture
             </button>
           </div>
         </form>
 
         <div
           id="request-status"
+          class="request-status"
+          role="status"
+          aria-live="polite"
+        ></div>
+      </section>
+
+      <section
+        class="panel saved-model-panel"
+        aria-labelledby="saved-analysis-heading"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="step-label">Saved architecture</p>
+            <h2 id="saved-analysis-heading">Analyze a stored model version</h2>
+          </div>
+
+          <button
+            id="refresh-models-button"
+            class="secondary-button"
+            type="button"
+          >
+            Refresh models
+          </button>
+        </div>
+
+        <p class="workspace-description">
+          Select a stored formal architecture and one of its immutable
+          versions. You can inspect it or ask a new what-if question without
+          repeating the original architecture description.
+        </p>
+
+        <form id="saved-analysis-form">
+          <div class="saved-model-selectors">
+            <div class="selector-field">
+              <label for="saved-model-select">Stored architecture</label>
+
+              <select id="saved-model-select" name="savedModel">
+                <option value="">Select a stored architecture</option>
+              </select>
+            </div>
+
+            <div class="selector-field">
+              <label for="saved-version-select">Model version</label>
+
+              <select
+                id="saved-version-select"
+                name="savedVersion"
+                disabled
+              >
+                <option value="">Select a version</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="model-actions">
+            <button
+              id="inspect-version-button"
+              class="secondary-button"
+              type="button"
+              disabled
+            >
+              Inspect selected version
+            </button>
+          </div>
+
+          <label for="saved-question">New what-if question</label>
+
+          <textarea
+            id="saved-question"
+            name="savedQuestion"
+            rows="3"
+            required
+            placeholder="For example: What happens if incoming load doubles?"
+          ></textarea>
+
+          <p class="field-help">
+            Architecture extraction is skipped. AI interprets only this new
+            scenario question, while application code performs validation and
+            calculations.
+          </p>
+
+          <div class="form-actions">
+            <button
+              id="analyze-saved-button"
+              class="primary-button"
+              type="submit"
+              disabled
+            >
+              Analyze selected version
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="saved-model-status"
           class="request-status"
           role="status"
           aria-live="polite"
@@ -100,7 +199,7 @@
       >
         <div class="section-heading">
           <div>
-            <p class="step-label">Step 2</p>
+            <p class="step-label">Analysis result</p>
             <h2 id="results-heading">Computed result</h2>
           </div>
 
@@ -158,7 +257,7 @@
         >
           <div class="section-heading">
             <div>
-              <p class="step-label">Step 3</p>
+              <p class="step-label">Formal model</p>
               <h2 id="model-workspace-heading">Inspect and version the model</h2>
             </div>
 
@@ -253,7 +352,10 @@
 
     <footer class="page-footer">
       <p>
-        AI semantically interprets the user's natural-language description and converts it into a formal architecture model. Validation, scenario analysis, and all calculations are then performed by deterministic application code.
+        AI semantically interprets the user's natural-language description and
+        converts it into a formal architecture model. Validation, scenario
+        analysis, and all calculations are then performed by deterministic
+        application code.
       </p>
     </footer>
   </body>

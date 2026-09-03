@@ -455,3 +455,55 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+/* Saved architecture selection */
+
+.saved-model-panel {
+  margin-top: 1.5rem;
+  padding: 2rem;
+}
+
+.saved-model-selectors {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(10rem, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selector-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selector-field select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--text-color);
+  font: inherit;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+}
+
+.selector-field select:focus {
+  border-color: var(--primary-color);
+  outline: 3px solid rgba(0, 120, 212, 0.15);
+}
+
+.selector-field select:disabled {
+  color: var(--muted-color);
+  cursor: not-allowed;
+  background-color: var(--background-color);
+}
+
+.saved-model-panel .model-actions {
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 700px) {
+  .saved-model-selectors {
+    grid-template-columns: 1fr;
+  }
+}

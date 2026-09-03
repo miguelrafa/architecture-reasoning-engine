@@ -5,12 +5,43 @@ const analyzeButton = document.querySelector('#analyze-button');
 const loadExampleButton = document.querySelector('#load-example-button');
 const requestStatus = document.querySelector('#request-status');
 
+const savedAnalysisForm = document.querySelector(
+  '#saved-analysis-form'
+);
+const savedModelSelect = document.querySelector(
+  '#saved-model-select'
+);
+const savedVersionSelect = document.querySelector(
+  '#saved-version-select'
+);
+const savedQuestionInput = document.querySelector(
+  '#saved-question'
+);
+const refreshModelsButton = document.querySelector(
+  '#refresh-models-button'
+);
+const inspectVersionButton = document.querySelector(
+  '#inspect-version-button'
+);
+const analyzeSavedButton = document.querySelector(
+  '#analyze-saved-button'
+);
+const savedModelStatus = document.querySelector(
+  '#saved-model-status'
+);
+
 const resultsSection = document.querySelector('#results-section');
 const resultStatus = document.querySelector('#result-status');
-const resultExplanation = document.querySelector('#result-explanation');
+const resultExplanation = document.querySelector(
+  '#result-explanation'
+);
 const rootCause = document.querySelector('#root-cause');
-const affectedComponents = document.querySelector('#affected-components');
-const resultAssumptions = document.querySelector('#result-assumptions');
+const affectedComponents = document.querySelector(
+  '#affected-components'
+);
+const resultAssumptions = document.querySelector(
+  '#result-assumptions'
+);
 
 const totalLatency = document.querySelector('#total-latency');
 const totalTokens = document.querySelector('#total-tokens');
@@ -32,7 +63,9 @@ const storedModelVersion = document.querySelector(
   '#stored-model-version'
 );
 const modelEditor = document.querySelector('#model-editor');
-const saveModelButton = document.querySelector('#save-model-button');
+const saveModelButton = document.querySelector(
+  '#save-model-button'
+);
 const saveVersionButton = document.querySelector(
   '#save-version-button'
 );
@@ -41,6 +74,7 @@ const modelStorageStatus = document.querySelector(
 );
 
 let currentStoredModelId = null;
+let availableStoredModels = [];
 
 /**
  * Example with enough information to exercise extraction, validation,
@@ -112,6 +146,7 @@ function extractErrorMessage(payload, fallbackMessage) {
     return payload.errors
       .map((error) => {
         const location = error.field ?? error.path;
+
         return location
           ? `${location}: ${error.message}`
           : error.message;
@@ -140,7 +175,10 @@ async function requestJson(url, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      extractErrorMessage(payload, 'The request could not be completed.')
+      extractErrorMessage(
+        payload,
+        'The request could not be completed.'
+      )
     );
   }
 
@@ -157,7 +195,24 @@ function updatePersistenceButtons({ busy = false } = {}) {
     busy || !hasEditableModel || currentStoredModelId !== null;
 
   saveVersionButton.disabled =
-    busy || currentStoredModelId === null;
+    busy || !hasEditableModel || currentStoredModelId === null;
+}
+
+/**
+ * Enables saved-model actions only when a model version is selected.
+ */
+function updateSavedAnalysisButtons({ busy = false } = {}) {
+  const hasModel = savedModelSelect.value !== '';
+  const hasVersion = savedVersionSelect.value !== '';
+  const hasQuestion = savedQuestionInput.value.trim() !== '';
+  const hasSelection = hasModel && hasVersion;
+
+  savedModelSelect.disabled = busy;
+  savedVersionSelect.disabled = busy || !hasModel;
+  inspectVersionButton.disabled = busy || !hasSelection;
+  analyzeSavedButton.disabled =
+    busy || !hasSelection || !hasQuestion;
+  refreshModelsButton.disabled = busy;
 }
 
 /**
@@ -184,15 +239,26 @@ function resetModelWorkspace(model) {
 }
 
 /**
- * Updates the interface after the repository saves a model version.
+ * Updates the interface with a model returned by the repository.
  */
-function applyStoredModel(storedModel) {
+function applyStoredModel(
+  storedModel,
+  { operation = 'loaded' } = {}
+) {
   currentStoredModelId = storedModel.id;
 
   storedModelId.textContent = storedModel.id;
-  storedModelVersion.textContent = String(storedModel.currentVersion);
+  storedModelVersion.textContent = String(
+    storedModel.currentVersion
+  );
 
-  modelVersionBadge.textContent = `Version ${storedModel.version} saved`;
+  const version = storedModel.version;
+
+  modelVersionBadge.textContent =
+    operation === 'saved'
+      ? `Version ${version} saved`
+      : `Version ${version} selected`;
+
   modelVersionBadge.className = 'model-version-badge saved';
 
   modelEditor.value = formatJson(storedModel.model);
@@ -219,11 +285,244 @@ function readEditedModel() {
     throw new Error('The formal model contains invalid JSON.');
   }
 
-  if (model === null || typeof model !== 'object' || Array.isArray(model)) {
+  if (
+    model === null ||
+    typeof model !== 'object' ||
+    Array.isArray(model)
+  ) {
     throw new Error('The formal model must be a JSON object.');
   }
 
   return model;
+}
+
+/**
+ * Finds metadata for the architecture selected in the interface.
+ */
+function getSelectedModelSummary() {
+  return availableStoredModels.find(
+    (model) => model.id === savedModelSelect.value
+  );
+}
+
+/**
+ * Populates all immutable versions for one stored architecture.
+ */
+function populateVersionOptions(
+  modelSummary,
+  preferredVersion = null
+) {
+  savedVersionSelect.replaceChildren();
+
+  if (!modelSummary) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Select a version';
+    savedVersionSelect.append(option);
+    savedVersionSelect.value = '';
+    updateSavedAnalysisButtons();
+    return;
+  }
+
+  const currentVersion = Number(modelSummary.currentVersion);
+
+  for (
+    let version = currentVersion;
+    version >= 1;
+    version -= 1
+  ) {
+    const option = document.createElement('option');
+    option.value = String(version);
+    option.textContent =
+      version === currentVersion
+        ? `Version ${version} (current)`
+        : `Version ${version}`;
+
+    savedVersionSelect.append(option);
+  }
+
+  const requestedVersion = String(
+    preferredVersion ?? currentVersion
+  );
+
+  const requestedVersionExists = Array.from(
+    savedVersionSelect.options
+  ).some((option) => option.value === requestedVersion);
+
+  savedVersionSelect.value = requestedVersionExists
+    ? requestedVersion
+    : String(currentVersion);
+
+  updateSavedAnalysisButtons();
+}
+
+/**
+ * Loads repository summaries and prepares the saved-model selector.
+ */
+async function loadStoredModels({
+  preferredModelId = '',
+  preferredVersion = null,
+  announce = true
+} = {}) {
+  refreshModelsButton.textContent = 'Refreshing…';
+
+  if (announce) {
+    savedModelStatus.textContent =
+      'Loading stored architecture models…';
+
+    savedModelStatus.className = 'request-status';
+  }
+
+  updateSavedAnalysisButtons({ busy: true });
+
+  try {
+    const payload = await requestJson('/api/models');
+
+    availableStoredModels = Array.isArray(payload)
+      ? payload
+      : payload.models ?? [];
+
+    savedModelSelect.replaceChildren();
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select a stored architecture';
+    savedModelSelect.append(placeholder);
+
+    for (const storedModel of availableStoredModels) {
+      const option = document.createElement('option');
+      option.value = storedModel.id;
+
+      const architectureName =
+        storedModel.architectureName ||
+        storedModel.name ||
+        storedModel.id;
+
+      const versionWord =
+        storedModel.currentVersion === 1
+          ? 'version'
+          : 'versions';
+
+      option.textContent =
+        `${architectureName} · ${storedModel.currentVersion} ` +
+        `${versionWord}`;
+
+      savedModelSelect.append(option);
+    }
+
+    const preferredModelExists = availableStoredModels.some(
+      (model) => model.id === preferredModelId
+    );
+
+    savedModelSelect.value = preferredModelExists
+      ? preferredModelId
+      : '';
+
+    populateVersionOptions(
+      getSelectedModelSummary(),
+      preferredVersion
+    );
+
+    if (announce) {
+      savedModelStatus.textContent =
+        availableStoredModels.length === 0
+          ? 'No stored models are available yet.'
+          : `${availableStoredModels.length} stored architecture ` +
+            `${availableStoredModels.length === 1 ? 'model' : 'models'} ` +
+            'available.';
+
+      savedModelStatus.className = 'request-status success';
+    }
+  } catch (error) {
+    availableStoredModels = [];
+    savedModelSelect.replaceChildren();
+
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Stored models could not be loaded';
+    savedModelSelect.append(option);
+
+    populateVersionOptions(null);
+
+    savedModelStatus.textContent =
+      error instanceof Error
+        ? error.message
+        : 'Stored models could not be loaded.';
+
+    savedModelStatus.className = 'request-status error';
+  } finally {
+    refreshModelsButton.textContent = 'Refresh models';
+    updateSavedAnalysisButtons();
+  }
+}
+
+/**
+ * Keeps the saved selectors synchronized after an analysis.
+ */
+function synchronizeSavedSelection(modelId, version) {
+  const summary = availableStoredModels.find(
+    (model) => model.id === modelId
+  );
+
+  if (!summary) {
+    return;
+  }
+
+  savedModelSelect.value = modelId;
+  populateVersionOptions(summary, version);
+}
+
+/**
+ * Displays a selected model version before a new scenario is analyzed.
+ */
+function renderStoredModelInspection(storedModel) {
+  resultStatus.textContent = 'MODEL LOADED';
+  resultStatus.className = 'status-badge';
+
+  resultExplanation.textContent =
+    `Stored architecture version ${storedModel.version} was loaded for ` +
+    'inspection. Enter a what-if question to analyze this exact version.';
+
+  rootCause.textContent = 'Not applicable';
+
+  renderList(
+    affectedComponents,
+    [],
+    'No scenario has been calculated yet.'
+  );
+
+  renderList(
+    resultAssumptions,
+    [],
+    'No scenario assumptions have been generated yet.'
+  );
+
+  totalLatency.textContent = '—';
+  totalTokens.textContent = '—';
+  requestCost.textContent = '—';
+  thousandRequestCost.textContent = '—';
+
+  modelJson.textContent = formatJson(storedModel.model);
+  validationJson.textContent = formatJson(null);
+  scenarioJson.textContent = formatJson(null);
+  telemetryJson.textContent = formatJson(null);
+
+  applyStoredModel(storedModel, {
+    operation: 'loaded'
+  });
+
+  modelStorageStatus.textContent =
+    `Version ${storedModel.version} loaded. Editing and saving it will ` +
+    'create a new immutable version.';
+
+  modelStorageStatus.className = 'request-status success';
+
+  resultsSection.hidden = false;
+
+  document.querySelector('#model-workspace-heading').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
 }
 
 /**
@@ -232,7 +531,8 @@ function readEditedModel() {
 function renderAnalysis(payload) {
   const computedResult = payload.result ?? {};
   const telemetry = payload.telemetry ?? {};
-  const status = payload.status ?? computedResult.status ?? 'UNKNOWN';
+  const status =
+    payload.status ?? computedResult.status ?? 'UNKNOWN';
 
   resultStatus.textContent = status;
   resultStatus.className = 'status-badge';
@@ -260,15 +560,20 @@ function renderAnalysis(payload) {
 
   renderList(
     resultAssumptions,
-    computedResult.assumptions ?? payload.scenario?.assumptions,
+    computedResult.assumptions ??
+      payload.scenario?.assumptions,
     'No additional assumptions were required.'
   );
 
-  totalLatency.textContent = Number.isFinite(telemetry.totalLatencyMs)
+  totalLatency.textContent = Number.isFinite(
+    telemetry.totalLatencyMs
+  )
     ? `${telemetry.totalLatencyMs} ms`
     : '—';
 
-  totalTokens.textContent = Number.isFinite(telemetry.totalTokens)
+  totalTokens.textContent = Number.isFinite(
+    telemetry.totalTokens
+  )
     ? telemetry.totalTokens.toLocaleString()
     : '—';
 
@@ -282,13 +587,48 @@ function renderAnalysis(payload) {
   );
 
   modelJson.textContent = formatJson(payload.model);
-  validationJson.textContent = formatJson(payload.modelValidation);
+  validationJson.textContent = formatJson(
+    payload.modelValidation
+  );
   scenarioJson.textContent = formatJson(payload.scenario);
   telemetryJson.textContent = formatJson(payload.telemetry);
 
-  resetModelWorkspace(payload.model);
+  if (payload.storedModel?.id) {
+    const selectedVersion =
+      payload.storedModel.selectedVersion ??
+      payload.storedModel.version ??
+      payload.storedModel.currentVersion;
+
+    const currentVersion =
+      payload.storedModel.currentVersion ?? selectedVersion;
+
+    applyStoredModel(
+      {
+        id: payload.storedModel.id,
+        currentVersion,
+        version: selectedVersion,
+        model: payload.model
+      },
+      {
+        operation: 'loaded'
+      }
+    );
+
+    synchronizeSavedSelection(
+      payload.storedModel.id,
+      selectedVersion
+    );
+
+    modelStorageStatus.textContent =
+      `Analysis used stored model version ${selectedVersion}.`;
+
+    modelStorageStatus.className = 'request-status success';
+  } else {
+    resetModelWorkspace(payload.model);
+  }
 
   resultsSection.hidden = false;
+
   resultsSection.scrollIntoView({
     behavior: 'smooth',
     block: 'start'
@@ -334,6 +674,8 @@ form.addEventListener('submit', async (event) => {
 
     requestStatus.textContent =
       'Analysis completed. Calculations and assumptions are shown below.';
+
+    requestStatus.className = 'request-status success';
   } catch (error) {
     requestStatus.textContent =
       error instanceof Error
@@ -343,13 +685,159 @@ form.addEventListener('submit', async (event) => {
     requestStatus.className = 'request-status error';
   } finally {
     analyzeButton.disabled = false;
-    analyzeButton.textContent = 'Analyze architecture';
+    analyzeButton.textContent = 'Analyze new architecture';
+  }
+});
+
+savedModelSelect.addEventListener('change', () => {
+  const modelSummary = getSelectedModelSummary();
+
+  populateVersionOptions(modelSummary);
+
+  if (modelSummary) {
+    savedModelStatus.textContent =
+      `Selected ${modelSummary.architectureName ?? modelSummary.id}. ` +
+      'Choose a version and enter a new what-if question.';
+
+    savedModelStatus.className = 'request-status';
+  } else {
+    savedModelStatus.textContent =
+      'Select a stored architecture to continue.';
+
+    savedModelStatus.className = 'request-status';
+  }
+});
+
+savedVersionSelect.addEventListener('change', () => {
+  updateSavedAnalysisButtons();
+
+  if (
+    savedModelSelect.value &&
+    savedVersionSelect.value
+  ) {
+    savedModelStatus.textContent =
+      `Version ${savedVersionSelect.value} selected.`;
+
+    savedModelStatus.className = 'request-status';
+  }
+});
+
+savedQuestionInput.addEventListener('input', () => {
+  updateSavedAnalysisButtons();
+});
+
+refreshModelsButton.addEventListener('click', async () => {
+  await loadStoredModels({
+    preferredModelId: savedModelSelect.value,
+    preferredVersion: savedVersionSelect.value
+  });
+});
+
+inspectVersionButton.addEventListener('click', async () => {
+  const modelId = savedModelSelect.value;
+  const version = savedVersionSelect.value;
+
+  if (!modelId || !version) {
+    return;
+  }
+
+  inspectVersionButton.textContent = 'Loading…';
+
+  savedModelStatus.textContent =
+    `Loading stored model version ${version}…`;
+
+  savedModelStatus.className = 'request-status';
+
+  updateSavedAnalysisButtons({ busy: true });
+
+  try {
+    const storedModel = await requestJson(
+      `/api/models/${encodeURIComponent(modelId)}` +
+        `?version=${encodeURIComponent(version)}`
+    );
+
+    renderStoredModelInspection(storedModel);
+
+    savedModelStatus.textContent =
+      `Stored model version ${version} loaded successfully.`;
+
+    savedModelStatus.className = 'request-status success';
+  } catch (error) {
+    savedModelStatus.textContent =
+      error instanceof Error
+        ? error.message
+        : 'The selected model version could not be loaded.';
+
+    savedModelStatus.className = 'request-status error';
+  } finally {
+    inspectVersionButton.textContent =
+      'Inspect selected version';
+
+    updateSavedAnalysisButtons();
+  }
+});
+
+savedAnalysisForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const modelId = savedModelSelect.value;
+  const version = savedVersionSelect.value;
+
+  if (!modelId || !version) {
+    return;
+  }
+
+  analyzeSavedButton.textContent = 'Analyzing…';
+
+  savedModelStatus.textContent =
+    `Analyzing stored model version ${version}. Please wait.`;
+
+  savedModelStatus.className = 'request-status';
+  resultsSection.hidden = true;
+
+  updateSavedAnalysisButtons({ busy: true });
+
+  try {
+    const payload = await requestJson(
+      `/api/models/${encodeURIComponent(modelId)}/analyze`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          version: Number(version),
+          question: savedQuestionInput.value
+        })
+      }
+    );
+
+    renderAnalysis(payload);
+
+    savedModelStatus.textContent =
+      `Analysis completed using stored model version ${version}.`;
+
+    savedModelStatus.className = 'request-status success';
+  } catch (error) {
+    savedModelStatus.textContent =
+      error instanceof Error
+        ? error.message
+        : 'The stored model analysis could not be completed.';
+
+    savedModelStatus.className = 'request-status error';
+  } finally {
+    analyzeSavedButton.textContent =
+      'Analyze selected version';
+
+    updateSavedAnalysisButtons();
   }
 });
 
 saveModelButton.addEventListener('click', async () => {
   saveModelButton.textContent = 'Saving…';
-  modelStorageStatus.textContent = 'Saving model as version 1…';
+  modelStorageStatus.textContent =
+    'Saving model as version 1…';
+
   modelStorageStatus.className = 'request-status';
 
   updatePersistenceButtons({ busy: true });
@@ -367,12 +855,21 @@ saveModelButton.addEventListener('click', async () => {
       })
     });
 
-    applyStoredModel(storedModel);
+    applyStoredModel(storedModel, {
+      operation: 'saved'
+    });
+
+    await loadStoredModels({
+      preferredModelId: storedModel.id,
+      preferredVersion: storedModel.version,
+      announce: false
+    });
 
     modelStorageStatus.textContent =
       'Model saved successfully as version 1.';
 
-    modelStorageStatus.className = 'request-status success';
+    modelStorageStatus.className =
+      'request-status success';
   } catch (error) {
     modelStorageStatus.textContent =
       error instanceof Error
@@ -392,7 +889,10 @@ saveVersionButton.addEventListener('click', async () => {
   }
 
   saveVersionButton.textContent = 'Saving…';
-  modelStorageStatus.textContent = 'Validating and saving a new version…';
+
+  modelStorageStatus.textContent =
+    'Validating and saving a new version…';
+
   modelStorageStatus.className = 'request-status';
 
   updatePersistenceButtons({ busy: true });
@@ -401,7 +901,9 @@ saveVersionButton.addEventListener('click', async () => {
     const model = readEditedModel();
 
     const storedModel = await requestJson(
-      `/api/models/${encodeURIComponent(currentStoredModelId)}`,
+      `/api/models/${encodeURIComponent(
+        currentStoredModelId
+      )}`,
       {
         method: 'PUT',
         headers: {
@@ -413,12 +915,21 @@ saveVersionButton.addEventListener('click', async () => {
       }
     );
 
-    applyStoredModel(storedModel);
+    applyStoredModel(storedModel, {
+      operation: 'saved'
+    });
+
+    await loadStoredModels({
+      preferredModelId: storedModel.id,
+      preferredVersion: storedModel.version,
+      announce: false
+    });
 
     modelStorageStatus.textContent =
       `Model saved successfully as version ${storedModel.version}.`;
 
-    modelStorageStatus.className = 'request-status success';
+    modelStorageStatus.className =
+      'request-status success';
   } catch (error) {
     modelStorageStatus.textContent =
       error instanceof Error
@@ -442,3 +953,7 @@ modelEditor.addEventListener('input', () => {
     modelStorageStatus.className = 'request-status';
   }
 });
+
+updatePersistenceButtons();
+updateSavedAnalysisButtons();
+loadStoredModels();
