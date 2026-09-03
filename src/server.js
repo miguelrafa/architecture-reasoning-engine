@@ -6,7 +6,11 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { ZodError } from 'zod';
 
-import { reasonAboutArchitecture } from './reasoningEngine.js';
+import {
+  reasonAboutArchitecture,
+  reasonAboutModel
+} from './reasoningEngine.js';
+
 import { createModelRepository } from './storage/modelRepository.js';
 
 const publicDirectory = fileURLToPath(
@@ -23,6 +27,7 @@ const defaultModelRepository = createModelRepository();
  */
 export function createApp({
   reasoningFunction = reasonAboutArchitecture,
+  storedModelReasoningFunction = reasonAboutModel,
   modelRepository = defaultModelRepository
 } = {}) {
   const app = express();
@@ -160,6 +165,62 @@ export function createApp({
       return next(error);
     }
   });
+
+  /**
+   * Runs a new scenario question against a selected stored model version.
+   *
+   * The architecture description is not extracted again. Foundry interprets
+   * only the new question, while application code performs validation and
+   * deterministic scenario calculations.
+   */
+  app.post('/api/models/:id/analyze', async (request, response, next) => {
+    try {
+      const { question, version = null } = request.body ?? {};
+
+      if (typeof question !== 'string' || question.trim() === '') {
+        return response.status(400).json({
+          status: 'INVALID_REQUEST',
+          errors: [
+            {
+              field: 'question',
+              message: 'A scenario question is required.'
+            }
+          ]
+        });
+      }
+
+      const storedModel = await modelRepository.getModel(
+        request.params.id,
+        version
+      );
+
+      if (!storedModel) {
+        return response.status(404).json({
+          status: 'NOT_FOUND',
+          message:
+            'The requested architecture model or version was not found.'
+        });
+      }
+
+      const result = await storedModelReasoningFunction(
+        storedModel.model,
+        question.trim()
+      );
+
+      return response.status(200).json({
+        ...result,
+        storedModel: {
+          id: storedModel.id,
+          selectedVersion: storedModel.version,
+          currentVersion: storedModel.currentVersion,
+          savedAt: storedModel.savedAt
+        }
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
 
   /**
    * Validates an edited architecture and stores it as the next version.

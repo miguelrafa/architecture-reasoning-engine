@@ -20,22 +20,22 @@ function enrichCallTelemetry(telemetry) {
 }
 
 /**
- * Combines telemetry from all LLM calls used by one analysis request.
+ * Combines telemetry from the optional LLM calls used by one request.
  *
- * Latency and token counts come from measured execution data.
- * Cost is always calculated in code.
+ * A new free-text architecture uses extraction and question interpretation.
+ * A saved formal model skips extraction and uses only question interpretation.
  */
 function createRequestTelemetry(
   requestStartedAt,
-  extractionTelemetry,
+  extractionTelemetry = null,
   interpretationTelemetry = null
 ) {
   const totalInputTokens =
-    extractionTelemetry.inputTokens +
+    (extractionTelemetry?.inputTokens ?? 0) +
     (interpretationTelemetry?.inputTokens ?? 0);
 
   const totalOutputTokens =
-    extractionTelemetry.outputTokens +
+    (extractionTelemetry?.outputTokens ?? 0) +
     (interpretationTelemetry?.outputTokens ?? 0);
 
   const totalTokens = totalInputTokens + totalOutputTokens;
@@ -57,9 +57,9 @@ function createRequestTelemetry(
       totalCost.estimatedCostPer1000RequestsUsd,
     currency: totalCost.currency,
     calls: {
-      architectureExtraction: enrichCallTelemetry(
-        extractionTelemetry
-      ),
+      architectureExtraction: extractionTelemetry
+        ? enrichCallTelemetry(extractionTelemetry)
+        : null,
       scenarioInterpretation: interpretationTelemetry
         ? enrichCallTelemetry(interpretationTelemetry)
         : null
@@ -68,9 +68,34 @@ function createRequestTelemetry(
 }
 
 /**
- * Runs the complete architecture reasoning workflow.
+ * Produces an explicit refusal when semantic errors make deterministic
+ * simulation unsafe.
+ */
+function createInvalidModelResult(
+  model,
+  modelValidation,
+  requestStartedAt,
+  extractionTelemetry = null
+) {
+  return {
+    status: 'NOT_ANSWERABLE',
+    reason:
+      'The architecture model contains semantic errors and cannot be simulated safely.',
+    model,
+    modelValidation,
+    scenario: null,
+    result: null,
+    telemetry: createRequestTelemetry(
+      requestStartedAt,
+      extractionTelemetry
+    )
+  };
+}
+
+/**
+ * Runs the complete reasoning workflow from a natural-language description.
  *
- * Foundry performs only two interpretation tasks:
+ * Foundry performs two semantic interpretation tasks:
  * - free text to formal architecture model;
  * - free-text question to formal scenario.
  *
@@ -89,25 +114,13 @@ export async function reasonAboutArchitecture(
 
   const modelValidation = validateSemantics(extraction.model);
 
-  /**
-   * Semantic errors make the model unsafe for deterministic simulation.
-   * The system returns the extracted model and validation evidence instead
-   * of asking the LLM to produce a plausible answer.
-   */
   if (!modelValidation.isValid) {
-    return {
-      status: 'NOT_ANSWERABLE',
-      reason:
-        'The architecture model contains semantic errors and cannot be simulated safely.',
-      model: extraction.model,
+    return createInvalidModelResult(
+      extraction.model,
       modelValidation,
-      scenario: null,
-      result: null,
-      telemetry: createRequestTelemetry(
-        requestStartedAt,
-        extraction.telemetry
-      )
-    };
+      requestStartedAt,
+      extraction.telemetry
+    );
   }
 
   const interpretation = await interpretScenarioQuestion(
@@ -133,6 +146,62 @@ export async function reasonAboutArchitecture(
     telemetry: createRequestTelemetry(
       requestStartedAt,
       extraction.telemetry,
+      interpretation.telemetry
+    )
+  };
+}
+
+/**
+ * Runs a new what-if question against an existing formal model.
+ *
+ * Architecture extraction is deliberately skipped because the selected
+ * stored version is already structured and schema-validated. Foundry is used
+ * only to convert the new natural-language question into a formal scenario.
+ *
+ * Optional dependencies allow deterministic tests without Foundry calls.
+ */
+export async function reasonAboutModel(
+  model,
+  scenarioQuestion,
+  {
+    questionInterpreter = interpretScenarioQuestion,
+    scenarioDispatcher = dispatchScenario
+  } = {}
+) {
+  const requestStartedAt = performance.now();
+  const modelValidation = validateSemantics(model);
+
+  if (!modelValidation.isValid) {
+    return createInvalidModelResult(
+      model,
+      modelValidation,
+      requestStartedAt
+    );
+  }
+
+  const interpretation = await questionInterpreter(
+    model,
+    scenarioQuestion
+  );
+
+  const result = scenarioDispatcher(
+    model,
+    interpretation.scenario
+  );
+
+  return {
+    status: result.status,
+    reason:
+      result.status === 'NOT_ANSWERABLE'
+        ? result.reason
+        : null,
+    model,
+    modelValidation,
+    scenario: interpretation.scenario,
+    result,
+    telemetry: createRequestTelemetry(
+      requestStartedAt,
+      null,
       interpretation.telemetry
     )
   };

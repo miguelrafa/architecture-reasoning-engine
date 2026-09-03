@@ -43,7 +43,16 @@ function createValidModel() {
 /**
  * Starts an isolated API and JSON repository for each test.
  */
-async function startModelApi(context) {
+async function startModelApi(
+  context,
+  {
+    storedModelReasoningFunction = async () => {
+      throw new Error(
+        'This test must not call the stored-model reasoning workflow.'
+      );
+    }
+  } = {}
+) {
   const directory = await mkdtemp(
     join(tmpdir(), 'architecture-model-api-')
   );
@@ -54,12 +63,13 @@ async function startModelApi(context) {
 
   const reasoningFunction = async () => {
     throw new Error(
-      'Model persistence tests must not call the reasoning workflow.'
+      'Model persistence tests must not call the full reasoning workflow.'
     );
   };
 
   const app = createApp({
     reasoningFunction,
+    storedModelReasoningFunction,
     modelRepository: repository
   });
 
@@ -170,6 +180,130 @@ test('creates, lists, edits, and retrieves model versions', async (context) => {
     'Model API Example'
   );
 });
+
+test(
+  'analyzes a selected historical model version',
+  async (context) => {
+    let analyzedModel = null;
+    let analyzedQuestion = null;
+
+    const storedModelReasoningFunction = async (model, question) => {
+      analyzedModel = model;
+      analyzedQuestion = question;
+
+      return {
+        status: 'ANSWERED',
+        reason: null,
+        model,
+        modelValidation: {
+          isValid: true,
+          errors: [],
+          warnings: [],
+          missingInformation: []
+        },
+        scenario: {
+          type: 'load_multiplication',
+          componentId: null,
+          newLatencyMs: null,
+          latencyMultiplier: null,
+          loadMultiplier: 2,
+          unsupportedReason: null,
+          missingInformation: [],
+          assumptions: []
+        },
+        result: {
+          status: 'ANSWERED',
+          scenarioType: 'load_multiplication',
+          loadMultiplier: 2
+        },
+        telemetry: {
+          totalLatencyMs: 5,
+          totalInputTokens: 20,
+          totalOutputTokens: 10,
+          totalTokens: 30,
+          totalEstimatedCostUsd: 0.000024,
+          estimatedCostPer1000RequestsUsd: 0.024,
+          currency: 'USD',
+          calls: {
+            architectureExtraction: null,
+            scenarioInterpretation: {
+              latencyMs: 5,
+              inputTokens: 20,
+              outputTokens: 10,
+              totalTokens: 30
+            }
+          }
+        }
+      };
+    };
+
+    const { baseUrl } = await startModelApi(context, {
+      storedModelReasoningFunction
+    });
+
+    const originalModel = createValidModel();
+
+    const createResponse = await fetch(`${baseUrl}/api/models`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: originalModel
+      })
+    });
+
+    const created = await createResponse.json();
+
+    const editedModel = structuredClone(originalModel);
+    editedModel.services[0].replicas = 3;
+
+    await fetch(`${baseUrl}/api/models/${created.id}`, {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: editedModel
+      })
+    });
+
+    const analyzeResponse = await fetch(
+      `${baseUrl}/api/models/${created.id}/analyze`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          version: 1,
+          question: '  What happens if incoming load doubles?  '
+        })
+      }
+    );
+
+    const analysis = await analyzeResponse.json();
+
+    assert.equal(analyzeResponse.status, 200);
+    assert.equal(analysis.status, 'ANSWERED');
+    assert.equal(analysis.storedModel.id, created.id);
+    assert.equal(analysis.storedModel.selectedVersion, 1);
+    assert.equal(analysis.storedModel.currentVersion, 2);
+
+    // Version 1 had two replicas; version 2 had three.
+    assert.equal(analyzedModel.services[0].replicas, 2);
+
+    assert.equal(
+      analyzedQuestion,
+      'What happens if incoming load doubles?'
+    );
+
+    assert.equal(
+      analysis.telemetry.calls.architectureExtraction,
+      null
+    );
+  }
+);
 
 test('rejects an invalid model through the API', async (context) => {
   const { baseUrl } = await startModelApi(context);
