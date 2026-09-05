@@ -3,6 +3,9 @@ const descriptionInput = document.querySelector('#description');
 const questionInput = document.querySelector('#question');
 const analyzeButton = document.querySelector('#analyze-button');
 const loadExampleButton = document.querySelector('#load-example-button');
+const loadCircuitBreakerExampleButton = document.querySelector(
+  '#load-circuit-breaker-example-button'
+);
 const requestStatus = document.querySelector('#request-status');
 
 const savedAnalysisForm = document.querySelector(
@@ -98,6 +101,34 @@ const exampleDescription = [
 
 const exampleQuestion =
   'What happens if the PostgreSQL database becomes unavailable?';
+
+/**
+ * Asynchronous example where a durable queue isolates the producer and a
+ * circuit breaker protects consumer-to-downstream message delivery.
+ */
+const circuitBreakerExampleDescription = [
+  'An order API receives 20 requests per second and publishes notification',
+  'messages asynchronously to a durable notification queue.',
+  'The order API has 2 replicas, each processing 100 requests per second,',
+  'with a baseline latency of 50 milliseconds.',
+  'The notification queue has 2 replicas, each processing 500 messages per',
+  'second, with a baseline latency of 10 milliseconds.',
+  'The notification queue delivers messages asynchronously to a notification',
+  'consumer.',
+  'A notification consumer has 2 replicas, each processing 100 messages per',
+  'second, with a baseline latency of 25 milliseconds.',
+  'The notification consumer communicates asynchronously with an email',
+  'service through a circuit breaker. The email service has 2 replicas, each',
+  'processing 100 messages per second, with a baseline latency of 80',
+  'milliseconds. The circuit breaker opens after 5 consecutive failures,',
+  'stays open for 30 seconds, and permits 1 probe call while half-open.',
+  'While the circuit breaker is open, pending messages remain in the',
+  'notification queue for later retry and the order API is not blocked.',
+  'All other dependencies use zero retries.'
+].join(' ');
+
+const circuitBreakerExampleQuestion =
+  'What happens if the circuit breaker between the notification-consumer and email-service opens?';
 
 /**
  * Writes list values as text nodes to avoid interpreting model output as HTML.
@@ -641,6 +672,17 @@ loadExampleButton.addEventListener('click', () => {
 
   requestStatus.textContent =
     'Example loaded. You can edit it before analysis.';
+
+  requestStatus.className = 'request-status';
+  descriptionInput.focus();
+});
+
+loadCircuitBreakerExampleButton.addEventListener('click', () => {
+  descriptionInput.value = circuitBreakerExampleDescription;
+  questionInput.value = circuitBreakerExampleQuestion;
+
+  requestStatus.textContent =
+    'Circuit breaker example loaded. You can edit it before analysis.';
 
   requestStatus.className = 'request-status';
   descriptionInput.focus();

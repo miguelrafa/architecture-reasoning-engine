@@ -1,6 +1,7 @@
 import { ScenarioQuestionSchema } from '../model/scenarioSchema.js';
 
 import {
+  analyzeCircuitBreakerState,
   analyzeComponentUnavailable,
   analyzeLatencyDegradation,
   analyzeLoadMultiplication
@@ -187,6 +188,36 @@ export function dispatchScenario(architectureModel, scenarioInput) {
     const result = analyzeLoadMultiplication(
       architectureModel,
       scenario.loadMultiplier
+    );
+
+    return includeInterpretationAssumptions(
+      result,
+      scenario.assumptions
+    );
+  }
+
+  if (scenario.type === 'circuit_breaker_state_change') {
+    if (!scenario.circuitBreakerFrom || !scenario.circuitBreakerTo) {
+      return createNotAnswerable(
+        scenario.type,
+        'The circuit-breaker-protected dependency was not identified.',
+        ['circuitBreakerFrom', 'circuitBreakerTo']
+      );
+    }
+
+    if (scenario.circuitBreakerState === null) {
+      return createNotAnswerable(
+        scenario.type,
+        'The requested circuit-breaker state was not identified.',
+        ['circuitBreakerState']
+      );
+    }
+
+    const result = analyzeCircuitBreakerState(
+      architectureModel,
+      scenario.circuitBreakerFrom,
+      scenario.circuitBreakerTo,
+      scenario.circuitBreakerState
     );
 
     return includeInterpretationAssumptions(

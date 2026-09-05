@@ -20,9 +20,9 @@ The first version assumes:
 - one entry component for incoming traffic;
 - synchronous or asynchronous dependencies;
 - deterministic capacity and retry calculations;
-- three supported scenario types.
+- four supported scenario types.
 
-The model does not represent cloud regions, resource pricing, deployment topology, detailed queue behavior, recovery over time, or probabilistic traffic distributions.
+The model does not represent cloud regions, resource pricing, deployment topology, queue depth, recovery timelines, or probabilistic traffic distributions. It can evaluate an explicitly requested circuit-breaker state as a steady-state snapshot.
 
 ## Core Concepts
 
@@ -49,6 +49,7 @@ A scenario describes one hypothetical change applied to the formal model:
 1. a component becomes unavailable;
 2. a component latency changes;
 3. incoming load is multiplied by a factor.
+4. an asynchronous circuit breaker is evaluated as open, half-open, or closed.
 
 ## Canonical Model Structure
 
@@ -76,6 +77,17 @@ Missing numeric values are represented as `null`. They are never replaced by inv
 | `retries` | Retry count after the initial attempt | No |
 | `backoff` | `none`, `fixed`, `linear`, `exponential`, or `unknown` | No |
 | `required` | Whether failure of the dependency blocks the caller | Yes |
+| `circuitBreaker` | Circuit-breaker policy for this dependency, or `null` | Yes |
+
+### Circuit-Breaker Fields
+
+| Field | Meaning | Required |
+|---|---|---|
+| `failureThreshold` | Consecutive failures required to open the breaker | No |
+| `openDurationMs` | Configured duration of the open state | No |
+| `halfOpenMaxCalls` | Maximum downstream probe calls while half-open | No |
+| `messageBufferComponentId` | Queue retaining pending messages | Required for queue retention |
+| `openBehavior` | `retain_in_queue`, `dead_letter`, or `reject` | Required for state analysis |
 
 ### Workload Fields
 
@@ -136,7 +148,8 @@ The following example adds an explicit incoming load of 100 RPS for demonstratio
       "timeoutMs": 2000,
       "retries": 3,
       "backoff": "none",
-      "required": true
+      "required": true,
+      "circuitBreaker": null
     },
     {
       "from": "pricing",
@@ -145,7 +158,8 @@ The following example adds an explicit incoming load of 100 RPS for demonstratio
       "timeoutMs": null,
       "retries": null,
       "backoff": "unknown",
-      "required": true
+      "required": true,
+      "circuitBreaker": null
     }
   ],
   "workload": {
@@ -259,6 +273,22 @@ A caller is added to the affected set when it has a required synchronous depende
 
 Asynchronous dependencies do not automatically propagate unavailability.
 
+### Asynchronous Circuit Breaker
+
+The circuit-breaker scenario evaluates one declared dependency in an explicit
+state:
+
+* `open`: downstream calls are blocked and the configured open behavior is
+  applied. For `retain_in_queue`, consumption is paused and messages remain in
+  the declared queue;
+* `half_open`: only `halfOpenMaxCalls` probe calls are allowed while remaining
+  messages stay queued;
+* `closed`: normal downstream delivery resumes.
+
+The result is deterministic because the requested state and breaker policy are
+formal inputs. The engine does not simulate failure counters, elapsed time,
+queue growth, or automatic state transitions.
+
 ### Availability Limitation
 
 A declared availability target such as 99.9% is a target, not a measured availability value.
@@ -298,6 +328,16 @@ The load multiplier and current incoming RPS must be provided.
 Capacity and saturation calculations require replica count and capacity per replica for each evaluated component.
 
 If the original incoming load is missing, the scenario returns `NOT_ANSWERABLE`.
+
+### Asynchronous Circuit-Breaker State Change
+
+The source component, target component, and requested state must identify one
+declared circuit-breaker-protected asynchronous dependency.
+
+Open-state analysis requires `openBehavior`. Queue-retention behavior also
+requires a valid `messageBufferComponentId`. Half-open analysis additionally
+requires `halfOpenMaxCalls`. Missing required values produce
+`NOT_ANSWERABLE` rather than an inferred policy.
 
 ## Missing-Information Policy
 

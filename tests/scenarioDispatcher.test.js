@@ -34,7 +34,8 @@ const architectureModel = {
       callType: 'sync',
       required: true,
       timeoutMs: 500,
-      retryPolicy: null
+      retryPolicy: null,
+      circuitBreaker: null
     }
   ],
   incomingLoadRps: 50,
@@ -59,6 +60,9 @@ function createScenario(overrides = {}) {
     newLatencyMs: null,
     latencyMultiplier: null,
     loadMultiplier: null,
+    circuitBreakerFrom: null,
+    circuitBreakerTo: null,
+    circuitBreakerState: null,
     unsupportedReason: null,
     missingInformation: [],
     assumptions: [],
@@ -148,4 +152,88 @@ test('refuses a question outside the supported scenarios', () => {
     result.reason,
     'The model cannot evaluate a regional disaster.'
   );
+});
+
+test('dispatches an open asynchronous circuit-breaker scenario', () => {
+  const model = structuredClone(architectureModel);
+
+  model.services.push(
+    {
+      id: 'message-queue',
+      name: 'Message Queue',
+      replicas: 2,
+      capacityRpsPerReplica: 200,
+      baselineLatencyMs: 10
+    },
+    {
+      id: 'notification-consumer',
+      name: 'Notification Consumer',
+      replicas: 2,
+      capacityRpsPerReplica: 100,
+      baselineLatencyMs: 20
+    },
+    {
+      id: 'email-service',
+      name: 'Email Service',
+      replicas: 2,
+      capacityRpsPerReplica: 100,
+      baselineLatencyMs: 80
+    }
+  );
+
+  model.dependencies.push({
+    from: 'notification-consumer',
+    to: 'email-service',
+    callType: 'async',
+    required: false,
+    timeoutMs: null,
+    retryPolicy: {
+      maxRetries: 0,
+      backoff: 'none'
+    },
+    circuitBreaker: {
+      failureThreshold: 5,
+      openDurationMs: 30000,
+      halfOpenMaxCalls: 1,
+      messageBufferComponentId: 'message-queue',
+      openBehavior: 'retain_in_queue'
+    }
+  });
+
+  const scenario = createScenario({
+    type: 'circuit_breaker_state_change',
+    circuitBreakerFrom: 'notification-consumer',
+    circuitBreakerTo: 'email-service',
+    circuitBreakerState: 'open',
+    assumptions: [
+      'The question refers to the declared notification breaker.'
+    ]
+  });
+
+  const result = dispatchScenario(model, scenario);
+
+  assert.equal(result.status, 'ANSWERED');
+  assert.equal(result.downstreamCallsAllowed, false);
+  assert.equal(result.messageDisposition, 'retain_in_queue');
+  assert.equal(result.messageBufferComponentId, 'message-queue');
+  assert.ok(
+    result.assumptions.includes(
+      'The question refers to the declared notification breaker.'
+    )
+  );
+});
+
+test('refuses a circuit-breaker scenario without a protected dependency', () => {
+  const scenario = createScenario({
+    type: 'circuit_breaker_state_change',
+    circuitBreakerState: 'open'
+  });
+
+  const result = dispatchScenario(architectureModel, scenario);
+
+  assert.equal(result.status, 'NOT_ANSWERABLE');
+  assert.deepEqual(result.missingInformation, [
+    'circuitBreakerFrom',
+    'circuitBreakerTo'
+  ]);
 });

@@ -30,9 +30,17 @@ Rules:
 9. If whether a dependency is required is unclear, use true as a
    conservative assumption and record that decision in assumptions.
 10. If retries are not mentioned, use null for retryPolicy.
-11. Record important missing information in missingInformation.
-12. Record short supporting excerpts or paraphrases in sourceEvidence.
-13. Set modelVersion to "1.0".
+11. If no circuit breaker is mentioned for a dependency, use null for
+    circuitBreaker.
+12. When a circuit breaker is declared, extract its failure threshold,
+    open duration, half-open probe limit, message-buffer component, and
+    open-state behavior. Never invent missing circuit-breaker values.
+13. Use retain_in_queue when the description explicitly states that
+    messages remain in a queue while the breaker is open. Use dead_letter
+    or reject only when that behavior is explicitly stated.
+14. Record important missing information in missingInformation.
+15. Record short supporting excerpts or paraphrases in sourceEvidence.
+16. Set modelVersion to "1.0".
 `;
 
 /**

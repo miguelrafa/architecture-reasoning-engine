@@ -14,6 +14,7 @@ export const ScenarioQuestionSchema = z.object({
     'component_unavailable',
     'latency_degradation',
     'load_multiplication',
+    'circuit_breaker_state_change',
     'unsupported'
   ]),
 
@@ -28,6 +29,17 @@ export const ScenarioQuestionSchema = z.object({
 
   // Incoming-load change, such as "traffic increases by five times".
   loadMultiplier: z.number().positive().nullable(),
+
+  // Source and target identify one circuit-breaker-protected dependency.
+  circuitBreakerFrom: z.string().min(1).nullable(),
+  circuitBreakerTo: z.string().min(1).nullable(),
+
+  // Requested steady-state snapshot of the circuit breaker.
+  circuitBreakerState: z.enum([
+    'open',
+    'half_open',
+    'closed'
+  ]).nullable(),
 
   // Explanation used when the question is outside the supported scenarios.
   unsupportedReason: z.string().min(1).nullable(),

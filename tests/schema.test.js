@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { ScenarioQuestionSchema } from '../src/model/scenarioSchema.js';
 import { ArchitectureModelSchema } from '../src/model/schema.js';
 
 /**
@@ -46,7 +47,8 @@ const validModel = {
       retryPolicy: {
         maxRetries: 3,
         backoff: 'exponential'
-      }
+      },
+      circuitBreaker: null
     },
     {
       from: 'checkout-api',
@@ -54,7 +56,8 @@ const validModel = {
       callType: 'sync',
       required: true,
       timeoutMs: 1000,
-      retryPolicy: null
+      retryPolicy: null,
+      circuitBreaker: null
     }
   ],
   incomingLoadRps: 100,
@@ -85,6 +88,97 @@ test('rejects a service with zero replicas in the base model', () => {
   invalidModel.services[0].replicas = 0;
 
   const result = ArchitectureModelSchema.safeParse(invalidModel);
+
+  assert.equal(result.success, false);
+});
+
+test('accepts a circuit breaker on an asynchronous dependency', () => {
+  const model = structuredClone(validModel);
+
+  model.services.push({
+    id: 'notification-queue',
+    name: 'Notification Queue',
+    replicas: 2,
+    capacityRpsPerReplica: 500,
+    baselineLatencyMs: 10
+  });
+
+  model.dependencies[0] = {
+    from: 'checkout-api',
+    to: 'pricing-service',
+    callType: 'async',
+    required: false,
+    timeoutMs: null,
+    retryPolicy: {
+      maxRetries: 0,
+      backoff: 'none'
+    },
+    circuitBreaker: {
+      failureThreshold: 5,
+      openDurationMs: 30000,
+      halfOpenMaxCalls: 1,
+      messageBufferComponentId: 'notification-queue',
+      openBehavior: 'retain_in_queue'
+    }
+  };
+
+  const result = ArchitectureModelSchema.safeParse(model);
+
+  assert.equal(result.success, true);
+});
+
+test('rejects a non-positive circuit-breaker failure threshold', () => {
+  const model = structuredClone(validModel);
+
+  model.dependencies[0].circuitBreaker = {
+    failureThreshold: 0,
+    openDurationMs: 30000,
+    halfOpenMaxCalls: 1,
+    messageBufferComponentId: 'orders-db',
+    openBehavior: 'retain_in_queue'
+  };
+
+  const result = ArchitectureModelSchema.safeParse(model);
+
+  assert.equal(result.success, false);
+});
+
+test('accepts the formal circuit-breaker scenario structure', () => {
+  const scenario = {
+    type: 'circuit_breaker_state_change',
+    componentId: null,
+    newLatencyMs: null,
+    latencyMultiplier: null,
+    loadMultiplier: null,
+    circuitBreakerFrom: 'notification-consumer',
+    circuitBreakerTo: 'email-service',
+    circuitBreakerState: 'open',
+    unsupportedReason: null,
+    missingInformation: [],
+    assumptions: []
+  };
+
+  const result = ScenarioQuestionSchema.safeParse(scenario);
+
+  assert.equal(result.success, true);
+});
+
+test('rejects an unknown circuit-breaker state', () => {
+  const scenario = {
+    type: 'circuit_breaker_state_change',
+    componentId: null,
+    newLatencyMs: null,
+    latencyMultiplier: null,
+    loadMultiplier: null,
+    circuitBreakerFrom: 'notification-consumer',
+    circuitBreakerTo: 'email-service',
+    circuitBreakerState: 'recovering',
+    unsupportedReason: null,
+    missingInformation: [],
+    assumptions: []
+  };
+
+  const result = ScenarioQuestionSchema.safeParse(scenario);
 
   assert.equal(result.success, false);
 });

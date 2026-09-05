@@ -207,6 +207,9 @@ test(
           newLatencyMs: null,
           latencyMultiplier: null,
           loadMultiplier: 2,
+          circuitBreakerFrom: null,
+          circuitBreakerTo: null,
+          circuitBreakerState: null,
           unsupportedReason: null,
           missingInformation: [],
           assumptions: []

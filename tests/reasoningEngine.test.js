@@ -68,6 +68,9 @@ test(
           newLatencyMs: null,
           latencyMultiplier: null,
           loadMultiplier: null,
+          circuitBreakerFrom: null,
+          circuitBreakerTo: null,
+          circuitBreakerState: null,
           unsupportedReason: null,
           missingInformation: [],
           assumptions: [
@@ -171,5 +174,91 @@ test(
       result.telemetry.calls.scenarioInterpretation,
       null
     );
+  }
+);
+
+test(
+  'runs an interpreted circuit-breaker scenario through deterministic code',
+  async () => {
+    const model = createStoredModel();
+
+    model.services.push(
+      {
+        id: 'message-queue',
+        name: 'Message Queue',
+        replicas: 2,
+        capacityRpsPerReplica: 500,
+        baselineLatencyMs: 10
+      },
+      {
+        id: 'consumer',
+        name: 'Consumer',
+        replicas: 2,
+        capacityRpsPerReplica: 100,
+        baselineLatencyMs: 20
+      },
+      {
+        id: 'downstream',
+        name: 'Downstream',
+        replicas: 2,
+        capacityRpsPerReplica: 100,
+        baselineLatencyMs: 80
+      }
+    );
+
+    model.dependencies.push({
+      from: 'consumer',
+      to: 'downstream',
+      callType: 'async',
+      required: false,
+      timeoutMs: null,
+      retryPolicy: {
+        maxRetries: 0,
+        backoff: 'none'
+      },
+      circuitBreaker: {
+        failureThreshold: 5,
+        openDurationMs: 30000,
+        halfOpenMaxCalls: 1,
+        messageBufferComponentId: 'message-queue',
+        openBehavior: 'retain_in_queue'
+      }
+    });
+
+    const questionInterpreter = async () => ({
+      scenario: {
+        type: 'circuit_breaker_state_change',
+        componentId: null,
+        newLatencyMs: null,
+        latencyMultiplier: null,
+        loadMultiplier: null,
+        circuitBreakerFrom: 'consumer',
+        circuitBreakerTo: 'downstream',
+        circuitBreakerState: 'open',
+        unsupportedReason: null,
+        missingInformation: [],
+        assumptions: []
+      },
+      telemetry: {
+        latencyMs: 5,
+        inputTokens: 20,
+        outputTokens: 10,
+        totalTokens: 30
+      }
+    });
+
+    const result = await reasonAboutModel(
+      model,
+      'What happens if the consumer circuit breaker opens?',
+      { questionInterpreter }
+    );
+
+    assert.equal(result.status, 'ANSWERED');
+    assert.equal(
+      result.result.scenarioType,
+      'circuit_breaker_state_change'
+    );
+    assert.equal(result.result.downstreamCallsAllowed, false);
+    assert.equal(result.result.messageDisposition, 'retain_in_queue');
   }
 );

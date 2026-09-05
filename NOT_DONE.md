@@ -4,11 +4,12 @@ This document defines the intentional boundaries of the current architecture and
 
 ## Supported Reasoning Domain
 
-The engine supports three deterministic scenario categories:
+The engine supports four deterministic scenario categories:
 
 1. component unavailability;
 2. component latency degradation;
 3. incoming-load multiplication.
+4. asynchronous circuit-breaker state change.
 
 Questions outside these categories return `NOT_ANSWERABLE`. New scenario types can be introduced through additional validated schemas and deterministic handlers.
 
@@ -26,7 +27,8 @@ It does not currently model:
 
 * queue depth or queueing theory;
 * probabilistic traffic distributions;
-* recovery behavior over time;
+* recovery behavior over time beyond explicit `open`, `half_open`, and
+  `closed` circuit-breaker snapshots;
 * Monte Carlo or discrete-event simulation;
 * regional failover and geographic topology.
 

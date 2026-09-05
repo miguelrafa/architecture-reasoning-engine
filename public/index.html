@@ -41,13 +41,23 @@
             <h2 id="analysis-heading">Describe and question</h2>
           </div>
 
-          <button
-            id="load-example-button"
-            class="secondary-button"
-            type="button"
-          >
-            Load example
-          </button>
+          <div class="example-actions">
+            <button
+              id="load-example-button"
+              class="secondary-button"
+              type="button"
+            >
+              Load base example
+            </button>
+
+            <button
+              id="load-circuit-breaker-example-button"
+              class="secondary-button"
+              type="button"
+            >
+              Load circuit breaker example
+            </button>
+          </div>
         </div>
 
         <form id="analysis-form">
@@ -78,7 +88,8 @@
 
           <p class="field-help">
             Supported scenarios: component unavailability, latency degradation,
-            and incoming-load multiplication.
+            incoming-load multiplication, and asynchronous circuit-breaker
+            state changes.
           </p>
 
           <div class="form-actions">

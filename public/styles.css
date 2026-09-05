@@ -127,6 +127,13 @@ h1 {
   letter-spacing: -0.02em;
 }
 
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
 label {
   display: block;
   margin: 1.25rem 0 0.5rem;
@@ -446,6 +453,11 @@ pre {
 
   .secondary-button,
   .primary-button {
+    width: 100%;
+  }
+
+  .example-actions {
+    flex-direction: column;
     width: 100%;
   }
 

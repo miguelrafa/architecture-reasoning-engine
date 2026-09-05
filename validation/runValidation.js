@@ -29,6 +29,27 @@ const completeArchitecture = [
   '600 milliseconds.'
 ].join(' ');
 
+const circuitBreakerArchitecture = [
+  'An order API receives 20 requests per second and publishes notification',
+  'messages asynchronously to a durable notification queue.',
+  'The order API has 2 replicas, capacity of 100 requests per second per',
+  'replica, and baseline latency of 50 milliseconds.',
+  'The notification queue has 2 replicas, capacity of 500 messages per',
+  'second per replica, and baseline latency of 10 milliseconds.',
+  'The notification queue delivers messages asynchronously to a notification',
+  'consumer.',
+  'A notification consumer has 2 replicas, capacity of 100 messages per',
+  'second per replica, and baseline latency of 25 milliseconds.',
+  'The notification consumer communicates asynchronously with an email',
+  'service through a circuit breaker. The email service has 2 replicas,',
+  'capacity of 100 messages per second per replica, and baseline latency of',
+  '80 milliseconds. The circuit breaker opens after 5 consecutive failures,',
+  'stays open for 30 seconds, and allows 1 probe call while half-open.',
+  'While the breaker is open, messages remain in the notification queue for',
+  'later retry and the order API is not blocked. All dependencies have zero',
+  'retries.'
+].join(' ');
+
 const validationCases = [
   {
     id: 'unavailability-propagation',
@@ -62,6 +83,39 @@ const validationCases = [
     allowedScenarioTypes: ['load_multiplication'],
     purpose:
       'Verify deterministic capacity and utilization calculations.'
+  },
+  {
+    id: 'async-circuit-breaker-open',
+    category: 'supported',
+    description: circuitBreakerArchitecture,
+    question:
+      'What happens if the circuit breaker between notification-consumer and email-service opens?',
+    allowedStatuses: ['ANSWERED'],
+    allowedScenarioTypes: ['circuit_breaker_state_change'],
+    purpose:
+      'Verify that an open breaker blocks downstream calls and retains messages in the durable queue.'
+  },
+  {
+    id: 'async-circuit-breaker-half-open',
+    category: 'supported',
+    description: circuitBreakerArchitecture,
+    question:
+      'What happens when the circuit breaker between notification-consumer and email-service enters half-open state?',
+    allowedStatuses: ['ANSWERED'],
+    allowedScenarioTypes: ['circuit_breaker_state_change'],
+    purpose:
+      'Verify limited probe calls while non-probe messages remain queued.'
+  },
+  {
+    id: 'async-circuit-breaker-recovery',
+    category: 'supported',
+    description: circuitBreakerArchitecture,
+    question:
+      'What happens when the circuit breaker between notification-consumer and email-service closes after recovery?',
+    allowedStatuses: ['ANSWERED'],
+    allowedScenarioTypes: ['circuit_breaker_state_change'],
+    purpose:
+      'Verify deterministic recovery to normal downstream delivery.'
   },
   {
     id: 'missing-baseline-latency',

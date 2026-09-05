@@ -19,6 +19,7 @@ Supported scenario types:
 1. component_unavailable
 2. latency_degradation
 3. load_multiplication
+4. circuit_breaker_state_change
 
 Rules:
 1. Never answer the question.
@@ -34,10 +35,16 @@ Rules:
    latencyMultiplier.
 9. For multiplied incoming traffic, use load_multiplication and
    loadMultiplier.
-10. Set fields that do not apply to null.
-11. Use unsupported only when the question is outside the three supported
+10. For a circuit breaker opening, entering half-open, or closing after
+    recovery, use circuit_breaker_state_change. Copy the exact from and to
+    identifiers from availableCircuitBreakers and set circuitBreakerState.
+11. If the question does not identify one available circuit breaker
+    unambiguously, leave its identifiers null and describe the ambiguity in
+    missingInformation.
+12. Set fields that do not apply to null.
+13. Use unsupported only when the question is outside the four supported
     scenario types.
-12. Make every conservative interpretation visible in assumptions.
+14. Make every conservative interpretation visible in assumptions.
 `;
 
 /**
@@ -101,6 +108,17 @@ export async function interpretScenarioQuestion(
     }))
   ];
 
+  const availableCircuitBreakers = architectureModel.dependencies
+    .filter((dependency) => dependency.circuitBreaker != null)
+    .map((dependency) => ({
+      from: dependency.from,
+      to: dependency.to,
+      callType: dependency.callType,
+      messageBufferComponentId:
+        dependency.circuitBreaker.messageBufferComponentId,
+      openBehavior: dependency.circuitBreaker.openBehavior
+    }));
+
   const { client, model } = createFoundryClient();
   const startedAt = performance.now();
 
@@ -115,7 +133,8 @@ export async function interpretScenarioQuestion(
         role: 'user',
         content: JSON.stringify({
           question: question.trim(),
-          availableComponents
+          availableComponents,
+          availableCircuitBreakers
         })
       }
     ],

@@ -37,7 +37,8 @@ function createValidModel() {
         callType: 'sync',
         required: true,
         timeoutMs: 500,
-        retryPolicy: null
+        retryPolicy: null,
+        circuitBreaker: null
       }
     ],
     incomingLoadRps: 50,
@@ -158,4 +159,15 @@ test('returns null for unknown models and versions', async (context) => {
   const missingVersion = await repository.getModel(created.id, 99);
 
   assert.equal(missingVersion, null);
+});
+
+test('normalizes a legacy dependency without a circuit-breaker field', async (context) => {
+  const { repository } = await createTemporaryRepository(context);
+  const legacyModel = createValidModel();
+
+  delete legacyModel.dependencies[0].circuitBreaker;
+
+  const created = await repository.createModel(legacyModel);
+
+  assert.equal(created.model.dependencies[0].circuitBreaker, null);
 });

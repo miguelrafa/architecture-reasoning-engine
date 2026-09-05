@@ -12,11 +12,12 @@ Natural-language architecture descriptions can represent an unlimited number of 
 
 ### Decision
 
-The engine supports three explicit scenario categories:
+The engine supports four explicit scenario categories:
 
 1. component unavailability;
 2. component latency degradation;
 3. incoming-load multiplication.
+4. asynchronous circuit-breaker state change.
 
 Questions outside these categories return `NOT_ANSWERABLE`.
 
@@ -114,6 +115,8 @@ Monte Carlo and discrete-event simulation were rejected because they require tra
 * The engine assumes steady-state behavior.
 * Queue depth, recovery over time, and probabilistic traffic are not modeled.
 * Asynchronous dependencies do not automatically propagate unavailability.
+* Circuit-breaker states are evaluated as explicit snapshots. The engine does
+  not infer state transitions from elapsed time or failure-event streams.
 
 ## Decision 4: Use a Minimal Containerized JavaScript Stack with Immutable Versioning
 

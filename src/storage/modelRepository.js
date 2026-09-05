@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ArchitectureModelSchema } from '../model/schema.js';
+import { parseArchitectureModel } from '../model/schema.js';
 
 const defaultStoragePath = fileURLToPath(
   new URL('../../data/models.json', import.meta.url)
@@ -118,7 +118,7 @@ export function createModelRepository({
    * Persists a new architecture as version 1.
    */
   async function createModel(model) {
-    const validatedModel = ArchitectureModelSchema.parse(model);
+    const validatedModel = parseArchitectureModel(model);
 
     return runMutation((store) => {
       const timestamp = new Date().toISOString();
@@ -180,7 +180,7 @@ export function createModelRepository({
    * Validates an edited model and saves it as the next immutable version.
    */
   async function updateModel(id, model) {
-    const validatedModel = ArchitectureModelSchema.parse(model);
+    const validatedModel = parseArchitectureModel(model);
 
     return runMutation((store) => {
       const record = store.records.find((candidate) => candidate.id === id);

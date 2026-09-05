@@ -417,3 +417,166 @@ export function analyzeLoadMultiplication(model, multiplier) {
       'and compared with the deterministic capacity of each component.'
   };
 }
+
+/**
+ * Evaluates one explicit steady-state circuit-breaker state on an
+ * asynchronous dependency.
+ *
+ * This is intentionally not a time-based simulation. The scenario supplies
+ * the state to evaluate, and deterministic code maps that state to downstream
+ * call permission and message disposition.
+ */
+export function analyzeCircuitBreakerState(
+  model,
+  fromComponentId,
+  toComponentId,
+  circuitBreakerState
+) {
+  const validStates = new Set(['open', 'half_open', 'closed']);
+
+  if (
+    typeof fromComponentId !== 'string' ||
+    typeof toComponentId !== 'string'
+  ) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      ['Circuit-breaker source and target component IDs are required.']
+    );
+  }
+
+  if (!validStates.has(circuitBreakerState)) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      ['Circuit-breaker state must be open, half_open, or closed.']
+    );
+  }
+
+  const dependency = model.dependencies.find(
+    (candidate) =>
+      candidate.from === fromComponentId &&
+      candidate.to === toComponentId
+  );
+
+  if (dependency === undefined) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      [
+        `Dependency "${fromComponentId}" to ` +
+          `"${toComponentId}" does not exist in the formal model.`
+      ]
+    );
+  }
+
+  if (dependency.callType !== 'async') {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      [
+        `Dependency "${fromComponentId}" to ` +
+          `"${toComponentId}" is not asynchronous.`
+      ]
+    );
+  }
+
+  const circuitBreaker = dependency.circuitBreaker ?? null;
+
+  if (circuitBreaker === null) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      [
+        `Dependency "${fromComponentId}" to ` +
+          `"${toComponentId}" has no declared circuit breaker.`
+      ]
+    );
+  }
+
+  if (circuitBreaker.openBehavior === null) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      ['Circuit-breaker openBehavior is required.']
+    );
+  }
+
+  if (
+    circuitBreaker.openBehavior === 'retain_in_queue' &&
+    circuitBreaker.messageBufferComponentId === null
+  ) {
+    return createNotAnswerable(
+      'circuit_breaker_state_change',
+      [
+        'messageBufferComponentId is required when open messages remain in the queue.'
+      ]
+    );
+  }
+
+  let downstreamCallsAllowed;
+  let allowedProbeCalls;
+  let messageDisposition;
+  let queueConsumption;
+
+  if (circuitBreakerState === 'open') {
+    downstreamCallsAllowed = false;
+    allowedProbeCalls = 0;
+    messageDisposition = circuitBreaker.openBehavior;
+    queueConsumption = 'paused';
+  } else if (circuitBreakerState === 'half_open') {
+    if (circuitBreaker.halfOpenMaxCalls === null) {
+      return createNotAnswerable(
+        'circuit_breaker_state_change',
+        [
+          'halfOpenMaxCalls is required to evaluate the half-open state.'
+        ]
+      );
+    }
+
+    downstreamCallsAllowed = true;
+    allowedProbeCalls = circuitBreaker.halfOpenMaxCalls;
+    messageDisposition = 'retain_non_probe_messages_in_queue';
+    queueConsumption = 'probe_only';
+  } else {
+    downstreamCallsAllowed = true;
+    allowedProbeCalls = null;
+    messageDisposition = 'normal_delivery';
+    queueConsumption = 'resumed';
+  }
+
+  const upstreamRequestBlocked = false;
+
+  return {
+    status: 'ANSWERED',
+    scenarioType: 'circuit_breaker_state_change',
+    rootCause: `${fromComponentId}->${toComponentId}`,
+    circuitBreakerState,
+    protectedDependency: {
+      from: fromComponentId,
+      to: toComponentId,
+      callType: dependency.callType
+    },
+    circuitBreakerConfiguration: {
+      failureThreshold: circuitBreaker.failureThreshold,
+      openDurationMs: circuitBreaker.openDurationMs,
+      halfOpenMaxCalls: circuitBreaker.halfOpenMaxCalls,
+      openBehavior: circuitBreaker.openBehavior
+    },
+    messageBufferComponentId:
+      circuitBreaker.messageBufferComponentId,
+    downstreamCallsAllowed,
+    allowedProbeCalls,
+    queueConsumption,
+    messageDisposition,
+    upstreamRequestBlocked,
+    affectedComponents:
+      circuitBreakerState === 'closed' ? [] : [toComponentId],
+    protectedComponents: [fromComponentId],
+    assumptions: [
+      'The requested circuit-breaker state is evaluated as a steady-state snapshot.',
+      'The message buffer remains available during the scenario.',
+      'Queue depth and recovery time are not simulated.'
+    ],
+    explanation:
+      `Circuit breaker on "${fromComponentId}" to ` +
+      `"${toComponentId}" is ${circuitBreakerState}. ` +
+      `Downstream calls are ${
+        downstreamCallsAllowed ? 'allowed' : 'blocked'
+      }; message handling is "${messageDisposition}".`
+  };
+}

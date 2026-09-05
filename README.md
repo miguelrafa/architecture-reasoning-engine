@@ -2,6 +2,10 @@
 
 **Status:** Final case-study implementation
 
+The asynchronous circuit-breaker extension, its deterministic semantics, test
+matrix, and copy-ready demonstration are documented in
+[`CIRCUIT_BREAKER_EXTENSION.md`](CIRCUIT_BREAKER_EXTENSION.md).
+
 This document records the four principal architectural decisions, their
 rationale, rejected alternatives, and accepted consequences.
 
@@ -20,11 +24,12 @@ explain, and verify.
 ### Decision
 
 The service accepts different architecture descriptions that fit the formal
-model, but supports only three scenario categories:
+model, but supports only four scenario categories:
 
 1. Component unavailability.
 2. Component latency degradation.
 3. Incoming-load multiplication.
+4. Asynchronous circuit-breaker state change.
 
 Questions outside these categories return an explicit `NOT_ANSWERABLE`
 result.
@@ -49,6 +54,8 @@ interpretation and deterministic computation unclear.
 - It does not attempt to answer every architecture question.
 - Unsupported questions are expected refusals, not system failures.
 - New scenario types can be added later as separate deterministic handlers.
+- An asynchronous circuit breaker can be evaluated as `open`, `half_open`,
+  or `closed` without asking the language model to simulate its behavior.
 
 ## Decision 2: Use the language model for interpretation, not computation
 
@@ -191,7 +198,7 @@ weaken traceability, reproducibility, and auditability.
 
 ## What breaks at 10x scope
 
-The current design is optimized for a small graph, a single user, and three
+The current design is optimized for a small graph, a single user, and four
 deterministic scenario types.
 
 At 10x scope:

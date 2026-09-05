@@ -205,6 +205,94 @@ export function validateSemantics(model) {
         )
       );
     }
+
+    const circuitBreaker = dependency.circuitBreaker ?? null;
+
+    if (circuitBreaker !== null) {
+      const dependencyPath = `${dependency.from}->${dependency.to}`;
+
+      if (
+        circuitBreaker.openBehavior === 'retain_in_queue' &&
+        dependency.callType !== 'async'
+      ) {
+        errors.push(
+          createIssue(
+            'QUEUE_RETENTION_REQUIRES_ASYNC_DEPENDENCY',
+            `Circuit breaker on "${dependency.from}" to ` +
+              `"${dependency.to}" retains messages but the dependency ` +
+              'is not asynchronous.',
+            dependencyPath
+          )
+        );
+      }
+
+      if (circuitBreaker.messageBufferComponentId === null) {
+        missingInformation.push(
+          createIssue(
+            'MISSING_MESSAGE_BUFFER',
+            `Circuit breaker on "${dependency.from}" to ` +
+              `"${dependency.to}" does not identify the queue or message ` +
+              'buffer that retains pending messages.',
+            dependencyPath
+          )
+        );
+      } else if (
+        !componentIds.has(circuitBreaker.messageBufferComponentId)
+      ) {
+        errors.push(
+          createIssue(
+            'UNKNOWN_MESSAGE_BUFFER',
+            `Message buffer "${circuitBreaker.messageBufferComponentId}" ` +
+              'does not exist in the architecture model.',
+            dependencyPath
+          )
+        );
+      }
+
+      if (circuitBreaker.openBehavior === null) {
+        missingInformation.push(
+          createIssue(
+            'MISSING_CIRCUIT_BREAKER_OPEN_BEHAVIOR',
+            `Open-state behavior is missing for the circuit breaker on ` +
+              `"${dependency.from}" to "${dependency.to}".`,
+            dependencyPath
+          )
+        );
+      }
+
+      if (circuitBreaker.failureThreshold === null) {
+        missingInformation.push(
+          createIssue(
+            'MISSING_CIRCUIT_BREAKER_FAILURE_THRESHOLD',
+            `Failure threshold is missing for the circuit breaker on ` +
+              `"${dependency.from}" to "${dependency.to}".`,
+            dependencyPath
+          )
+        );
+      }
+
+      if (circuitBreaker.openDurationMs === null) {
+        missingInformation.push(
+          createIssue(
+            'MISSING_CIRCUIT_BREAKER_OPEN_DURATION',
+            `Open duration is missing for the circuit breaker on ` +
+              `"${dependency.from}" to "${dependency.to}".`,
+            dependencyPath
+          )
+        );
+      }
+
+      if (circuitBreaker.halfOpenMaxCalls === null) {
+        missingInformation.push(
+          createIssue(
+            'MISSING_CIRCUIT_BREAKER_HALF_OPEN_LIMIT',
+            `Half-open probe limit is missing for the circuit breaker on ` +
+              `"${dependency.from}" to "${dependency.to}".`,
+            dependencyPath
+          )
+        );
+      }
+    }
   }
 
   // A synchronous cycle can leave components waiting on one another.

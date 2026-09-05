@@ -29,6 +29,27 @@ export const RetryPolicySchema = z.object({
 });
 
 /**
+ * Describes a circuit breaker that protects message delivery from an
+ * asynchronous consumer to a downstream component.
+ *
+ * Nullable values remain explicit when the description does not provide
+ * enough information. The presence of this object means that the dependency
+ * is circuit-breaker protected; a null value means that no breaker was
+ * declared.
+ */
+export const CircuitBreakerSchema = z.object({
+  failureThreshold: z.number().int().positive().nullable(),
+  openDurationMs: z.number().positive().nullable(),
+  halfOpenMaxCalls: z.number().int().positive().nullable(),
+  messageBufferComponentId: z.string().min(1).nullable(),
+  openBehavior: z.enum([
+    'retain_in_queue',
+    'dead_letter',
+    'reject'
+  ]).nullable()
+});
+
+/**
  * Describes a directed call from one component to another.
  */
 export const DependencySchema = z.object({
@@ -37,7 +58,8 @@ export const DependencySchema = z.object({
   callType: z.enum(['sync', 'async']),
   required: z.boolean(),
   timeoutMs: z.number().positive().nullable(),
-  retryPolicy: RetryPolicySchema.nullable()
+  retryPolicy: RetryPolicySchema.nullable(),
+  circuitBreaker: CircuitBreakerSchema.nullable()
 });
 
 /**
@@ -84,3 +106,28 @@ export const ArchitectureModelSchema = z.object({
   missingInformation: z.array(z.string()),
   sourceEvidence: z.array(z.string())
 });
+
+/**
+ * Normalizes models created before circuit-breaker support was introduced.
+ * This keeps existing persisted model versions editable and reusable while
+ * the strict Foundry output schema continues to require every field.
+ */
+export function parseArchitectureModel(model) {
+  if (
+    model === null ||
+    typeof model !== 'object' ||
+    !Array.isArray(model.dependencies)
+  ) {
+    return ArchitectureModelSchema.parse(model);
+  }
+
+  const normalizedModel = {
+    ...model,
+    dependencies: model.dependencies.map((dependency) => ({
+      ...dependency,
+      circuitBreaker: dependency.circuitBreaker ?? null
+    }))
+  };
+
+  return ArchitectureModelSchema.parse(normalizedModel);
+}
