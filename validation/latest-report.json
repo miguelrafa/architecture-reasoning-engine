@@ -1,8 +1,8 @@
 {
   "reportVersion": "1.0",
-  "generatedAt": "2026-09-03T17:50:58.429Z",
-  "executionStartedAt": "2026-09-03T17:49:35.005Z",
-  "executionFinishedAt": "2026-09-03T17:50:58.430Z",
+  "generatedAt": "2026-09-05T21:11:49.538Z",
+  "executionStartedAt": "2026-09-05T21:09:56.471Z",
+  "executionFinishedAt": "2026-09-05T21:11:49.539Z",
   "methodology": {
     "executionMode": "sequential",
     "usesLiveFoundry": true,
@@ -11,27 +11,27 @@
     "deterministicTests": "Executed separately with npm test and without Foundry calls"
   },
   "summary": {
-    "totalCases": 12,
-    "matchedCases": 12,
+    "totalCases": 15,
+    "matchedCases": 15,
     "unmatchedCases": 0,
     "expectationMatchPercent": 100,
-    "measuredResponses": 12,
+    "measuredResponses": 15,
     "latencyMs": {
-      "minimum": 4258,
-      "p50": 6808,
-      "p95": 8657,
-      "maximum": 8657
+      "minimum": 3289,
+      "p50": 7240,
+      "p95": 11901,
+      "maximum": 11901
     },
     "tokenUsage": {
-      "inputTokens": 14867,
-      "outputTokens": 4884,
-      "totalTokens": 19751
+      "inputTokens": 24848,
+      "outputTokens": 7196,
+      "totalTokens": 32044
     },
     "estimatedCost": {
       "currency": "USD",
-      "totalUsd": 0.013761,
-      "averagePerRequestUsd": 0.001147,
-      "projectedPer1000RequestsUsd": 1.1468
+      "totalUsd": 0.021453,
+      "averagePerRequestUsd": 0.00143,
+      "projectedPer1000RequestsUsd": 1.4302
     }
   },
   "cases": [
@@ -49,187 +49,13 @@
       "observedStatus": "ANSWERED",
       "observedScenarioType": "component_unavailable",
       "matchedExpectation": true,
-      "measuredWallClockMs": 8658,
+      "measuredWallClockMs": 7556,
       "response": {
         "status": "ANSWERED",
         "reason": null,
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "checkout-api-order-service-postgresql",
-          "services": [
-            {
-              "id": "checkout-api",
-              "name": "checkout API",
-              "replicas": 2,
-              "capacityRpsPerReplica": 100,
-              "baselineLatencyMs": 100
-            },
-            {
-              "id": "order-service",
-              "name": "order service",
-              "replicas": 2,
-              "capacityRpsPerReplica": 80,
-              "baselineLatencyMs": 200
-            }
-          ],
-          "dataStores": [
-            {
-              "id": "postgresql-db",
-              "name": "PostgreSQL database",
-              "type": "relational",
-              "replicas": 2,
-              "capacityRpsPerReplica": 120,
-              "baselineLatencyMs": 50
-            }
-          ],
-          "dependencies": [
-            {
-              "from": "checkout-api",
-              "to": "order-service",
-              "callType": "sync",
-              "required": true,
-              "timeoutMs": 500,
-              "retryPolicy": {
-                "maxRetries": 2,
-                "backoff": "exponential"
-              }
-            },
-            {
-              "from": "order-service",
-              "to": "postgresql-db",
-              "callType": "sync",
-              "required": true,
-              "timeoutMs": 300,
-              "retryPolicy": {
-                "maxRetries": 1,
-                "backoff": "fixed"
-              }
-            }
-          ],
-          "incomingLoadRps": 50,
-          "declaredTargets": {
-            "availabilityPercent": 99.9,
-            "maximumLatencyMs": 600,
-            "minimumThroughputRps": null
-          },
-          "assumptions": [
-            "All service calls are synchronous as explicitly stated.",
-            "Dependencies are required as not stated otherwise."
-          ],
-          "missingInformation": [
-            "Whether minimum throughput requirement exists."
-          ],
-          "sourceEvidence": [
-            "The checkout API receives 50 requests per second.",
-            "checkout API has 2 replicas, each can process 100 RPS, latency 100 ms.",
-            "checkout API calls order service synchronously with 500 ms timeout and 2 retries with exponential backoff.",
-            "order service has 2 replicas, each 80 RPS, latency 200 ms.",
-            "order service calls PostgreSQL DB synchronously with 300 ms timeout and 1 retry with linear (fixed) backoff.",
-            "PostgreSQL DB has 2 replicas, each 120 RPS, latency 50 ms.",
-            "Declared availability target 99.9% and max latency 600 ms."
-          ]
-        },
-        "modelValidation": {
-          "isValid": true,
-          "errors": [],
-          "warnings": [],
-          "missingInformation": []
-        },
-        "scenario": {
-          "type": "component_unavailable",
-          "componentId": "postgresql-db",
-          "newLatencyMs": null,
-          "latencyMultiplier": null,
-          "loadMultiplier": null,
-          "unsupportedReason": null,
-          "missingInformation": [],
-          "assumptions": [
-            "The question refers to the PostgreSQL database identified as 'postgresql-db' in available components",
-            "The scenario concerns complete unavailability of the 'postgresql-db' component"
-          ]
-        },
-        "result": {
-          "status": "ANSWERED",
-          "scenarioType": "component_unavailable",
-          "rootCause": "postgresql-db",
-          "affectedComponents": [
-            "postgresql-db",
-            "order-service",
-            "checkout-api"
-          ],
-          "assumptions": [
-            "Only required synchronous dependencies propagate unavailability.",
-            "The question refers to the PostgreSQL database identified as 'postgresql-db' in available components",
-            "The scenario concerns complete unavailability of the 'postgresql-db' component"
-          ],
-          "explanation": "Component \"postgresql-db\" is unavailable. The affected component list was calculated by traversing required synchronous dependencies in reverse."
-        },
-        "telemetry": {
-          "totalLatencyMs": 8657,
-          "totalInputTokens": 1328,
-          "totalOutputTokens": 482,
-          "totalTokens": 1810,
-          "totalEstimatedCostUsd": 0.0013024,
-          "estimatedCostPer1000RequestsUsd": 1.3024,
-          "currency": "USD",
-          "calls": {
-            "architectureExtraction": {
-              "latencyMs": 5748,
-              "inputTokens": 865,
-              "outputTokens": 402,
-              "totalTokens": 1267,
-              "cost": {
-                "model": "gpt-4.1-mini",
-                "deploymentType": "GlobalStandard",
-                "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.0006432,
-                "totalCostUsd": 0.0009892,
-                "estimatedCostPer1000RequestsUsd": 0.9892,
-                "pricingVerifiedOn": "2026-09-02"
-              }
-            },
-            "scenarioInterpretation": {
-              "latencyMs": 2905,
-              "inputTokens": 463,
-              "outputTokens": 80,
-              "totalTokens": 543,
-              "cost": {
-                "model": "gpt-4.1-mini",
-                "deploymentType": "GlobalStandard",
-                "currency": "USD",
-                "inputCostUsd": 0.0001852,
-                "outputCostUsd": 0.000128,
-                "totalCostUsd": 0.0003132,
-                "estimatedCostPer1000RequestsUsd": 0.3132,
-                "pricingVerifiedOn": "2026-09-02"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "id": "latency-timeout",
-      "category": "supported",
-      "purpose": "Verify deterministic comparison between degraded latency and timeout.",
-      "question": "For the order-service component, analyze a latency degradation where its baseline latency is multiplied by 3. Do not model the component as unavailable.",
-      "allowedStatuses": [
-        "ANSWERED"
-      ],
-      "allowedScenarioTypes": [
-        "latency_degradation"
-      ],
-      "observedStatus": "ANSWERED",
-      "observedScenarioType": "latency_degradation",
-      "matchedExpectation": true,
-      "measuredWallClockMs": 7435,
-      "response": {
-        "status": "ANSWERED",
-        "reason": null,
-        "model": {
-          "modelVersion": "1.0",
-          "architectureName": "checkout-order-postgresql-system",
+          "architectureName": "checkout-order-system",
           "services": [
             {
               "id": "checkout-api",
@@ -266,7 +92,8 @@
               "retryPolicy": {
                 "maxRetries": 2,
                 "backoff": "exponential"
-              }
+              },
+              "circuitBreaker": null
             },
             {
               "from": "order-service",
@@ -276,8 +103,9 @@
               "timeoutMs": 300,
               "retryPolicy": {
                 "maxRetries": 1,
-                "backoff": "fixed"
-              }
+                "backoff": "none"
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 50,
@@ -287,104 +115,102 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "all dependencies are required"
+            "all dependencies are synchronous as explicitly stated",
+            "all dependencies are required as not specified otherwise"
           ],
-          "missingInformation": [],
+          "missingInformation": [
+            "backoff type for order service to postgresql retry is stated as linear but 'linear' is not a supported backoff type. Assumed 'none'."
+          ],
           "sourceEvidence": [
             "checkout API receives 50 requests per second",
-            "checkout API has 2 replicas, each replica can process 100 requests per second, baseline latency 100ms",
-            "checkout API synchronously calls order service with 500ms timeout and 2 retries exponential backoff",
-            "order service has 2 replicas, each replica can process 80 requests per second, baseline latency 200ms",
-            "order service synchronously calls PostgreSQL database with 300ms timeout and 1 retry linear backoff",
-            "PostgreSQL database has 2 replicas, each replica can process 120 requests per second, baseline latency 50ms",
-            "availability target 99.9 percent, maximum latency 600 milliseconds"
+            "checkout API has 2 replicas each processing 100 rps with 100ms latency",
+            "checkout API synchronously calls order service with 500ms timeout and retries twice with exponential backoff",
+            "order service has 2 replicas each processing 80 rps with 200ms latency",
+            "order service synchronously calls PostgreSQL database with 300ms timeout and retries once with linear backoff",
+            "PostgreSQL database has 2 replicas each processing 120 rps with 50ms latency",
+            "availability target is 99.9 percent and maximum latency is 600 milliseconds"
           ]
         },
         "modelValidation": {
           "isValid": true,
           "errors": [],
-          "warnings": [],
+          "warnings": [
+            {
+              "code": "RETRIES_WITHOUT_BACKOFF",
+              "message": "Dependency \"order-service\" to \"postgresql-db\" retries without backoff.",
+              "path": "order-service->postgresql-db"
+            }
+          ],
           "missingInformation": []
         },
         "scenario": {
-          "type": "latency_degradation",
-          "componentId": "order-service",
+          "type": "component_unavailable",
+          "componentId": "postgresql-db",
           "newLatencyMs": null,
-          "latencyMultiplier": 3,
+          "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "Latency degradation is interpreted as a multiplicative increase in baseline latency as specified.",
-            "The component remains available as explicitly stated."
+            "The component 'postgresql-db' is the PostgreSQL database referenced in the question."
           ]
         },
         "result": {
           "status": "ANSWERED",
-          "scenarioType": "latency_degradation",
-          "componentId": "order-service",
-          "baselineLatencyMs": 200,
-          "scenarioLatencyMs": 600,
-          "dependencyResults": [
-            {
-              "from": "checkout-api",
-              "to": "order-service",
-              "required": true,
-              "configuredTimeoutMs": 500,
-              "scenarioLatencyMs": 600,
-              "timeoutOccurs": true
-            }
-          ],
+          "scenarioType": "component_unavailable",
+          "rootCause": "postgresql-db",
           "affectedComponents": [
+            "postgresql-db",
             "order-service",
             "checkout-api"
           ],
           "assumptions": [
-            "The scenario latency applies equally to all synchronous callers.",
-            "Timeout impact propagates only through required synchronous dependencies.",
-            "Latency degradation is interpreted as a multiplicative increase in baseline latency as specified.",
-            "The component remains available as explicitly stated."
+            "Only required synchronous dependencies propagate unavailability.",
+            "The component 'postgresql-db' is the PostgreSQL database referenced in the question."
           ],
-          "explanation": "Latency impact for \"order-service\" was calculated by comparing the scenario latency with each configured synchronous timeout."
+          "explanation": "Component \"postgresql-db\" is unavailable. The affected component list was calculated by traversing required synchronous dependencies in reverse."
         },
         "telemetry": {
-          "totalLatencyMs": 7435,
-          "totalInputTokens": 1344,
-          "totalOutputTokens": 457,
-          "totalTokens": 1801,
-          "totalEstimatedCostUsd": 0.0012688,
-          "estimatedCostPer1000RequestsUsd": 1.2688,
+          "totalLatencyMs": 7556,
+          "totalInputTokens": 1718,
+          "totalOutputTokens": 514,
+          "totalTokens": 2232,
+          "totalEstimatedCostUsd": 0.0015096,
+          "estimatedCostPer1000RequestsUsd": 1.5096,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 5376,
-              "inputTokens": 865,
-              "outputTokens": 387,
-              "totalTokens": 1252,
+              "latencyMs": 5461,
+              "inputTokens": 1090,
+              "outputTokens": 429,
+              "totalTokens": 1519,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.0006192,
-                "totalCostUsd": 0.0009652,
-                "estimatedCostPer1000RequestsUsd": 0.9652,
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.0006864,
+                "totalCostUsd": 0.0011224,
+                "estimatedCostPer1000RequestsUsd": 1.1224,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2058,
-              "inputTokens": 479,
-              "outputTokens": 70,
-              "totalTokens": 549,
+              "latencyMs": 2091,
+              "inputTokens": 628,
+              "outputTokens": 85,
+              "totalTokens": 713,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001916,
-                "outputCostUsd": 0.000112,
-                "totalCostUsd": 0.0003036,
-                "estimatedCostPer1000RequestsUsd": 0.3036,
+                "inputCostUsd": 0.0002512,
+                "outputCostUsd": 0.000136,
+                "totalCostUsd": 0.0003872,
+                "estimatedCostPer1000RequestsUsd": 0.3872,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -393,20 +219,20 @@
       }
     },
     {
-      "id": "incoming-load-multiplication",
+      "id": "latency-timeout",
       "category": "supported",
-      "purpose": "Verify deterministic capacity and utilization calculations.",
-      "question": "What happens if incoming load to the checkout API doubles?",
+      "purpose": "Verify deterministic comparison between degraded latency and timeout.",
+      "question": "For the order-service component, analyze a latency degradation where its baseline latency is multiplied by 3. Do not model the component as unavailable.",
       "allowedStatuses": [
         "ANSWERED"
       ],
       "allowedScenarioTypes": [
-        "load_multiplication"
+        "latency_degradation"
       ],
       "observedStatus": "ANSWERED",
-      "observedScenarioType": "load_multiplication",
+      "observedScenarioType": "latency_degradation",
       "matchedExpectation": true,
-      "measuredWallClockMs": 7770,
+      "measuredWallClockMs": 8466,
       "response": {
         "status": "ANSWERED",
         "reason": null,
@@ -449,7 +275,8 @@
               "retryPolicy": {
                 "maxRetries": 2,
                 "backoff": "exponential"
-              }
+              },
+              "circuitBreaker": null
             },
             {
               "from": "order-service",
@@ -459,8 +286,9 @@
               "timeoutMs": 300,
               "retryPolicy": {
                 "maxRetries": 1,
-                "backoff": "none"
-              }
+                "backoff": "fixed"
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 50,
@@ -470,34 +298,229 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "Dependencies are synchronous as stated",
-            "All dependencies are required calls",
-            "Linear backoff considered as no backoff"
+            "callType for dependencies assumed sync as stated",
+            "dependencies assumed required as not stated otherwise"
           ],
           "missingInformation": [
-            "Minimum throughput requirement",
-            "Exact retry backoff description for linear backoff"
+            "circuit breaker configurations for dependencies not provided"
           ],
           "sourceEvidence": [
-            "The checkout API receives 50 requests per second",
-            "The checkout API has 2 replicas, each replica can process 100 requests per second, and baseline latency 100 ms",
-            "The checkout API synchronously calls order service with 500 ms timeout, retries twice with exponential backoff",
-            "The order service has 2 replicas, each can process 80 requests per second, baseline latency 200 ms",
-            "The order service synchronously calls PostgreSQL database with 300 ms timeout, retries once with linear backoff",
-            "The PostgreSQL database has 2 replicas, each with 120 requests per second capacity and 50 ms baseline latency",
-            "Availability target 99.9% and max latency 600 ms"
+            "Checkout API receives 50 requests per second with 2 replicas, each 100 rps, latency 100 ms",
+            "Checkout API synchronously calls Order Service with 500 ms timeout and retries twice using exponential backoff",
+            "Order Service has 2 replicas, 80 rps per replica, latency 200 ms",
+            "Order Service synchronously calls PostgreSQL DB with 300 ms timeout and retries once with linear (fixed) backoff",
+            "PostgreSQL DB has 2 replicas, 120 rps each, latency 50 ms",
+            "Availability target is 99.9% and max latency 600 ms"
           ]
         },
         "modelValidation": {
           "isValid": true,
           "errors": [],
-          "warnings": [
+          "warnings": [],
+          "missingInformation": []
+        },
+        "scenario": {
+          "type": "latency_degradation",
+          "componentId": "order-service",
+          "newLatencyMs": null,
+          "latencyMultiplier": 3,
+          "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
+          "unsupportedReason": null,
+          "missingInformation": [],
+          "assumptions": [
+            "Latency degradation is interpreted as a latency multiplier as specified.",
+            "The component is not marked as unavailable as per instruction.",
+            "No circuit breakers are associated with the order-service to consider."
+          ]
+        },
+        "result": {
+          "status": "ANSWERED",
+          "scenarioType": "latency_degradation",
+          "componentId": "order-service",
+          "baselineLatencyMs": 200,
+          "scenarioLatencyMs": 600,
+          "dependencyResults": [
             {
-              "code": "RETRIES_WITHOUT_BACKOFF",
-              "message": "Dependency \"order-service\" to \"postgresql-db\" retries without backoff.",
-              "path": "order-service->postgresql-db"
+              "from": "checkout-api",
+              "to": "order-service",
+              "required": true,
+              "configuredTimeoutMs": 500,
+              "scenarioLatencyMs": 600,
+              "timeoutOccurs": true
             }
           ],
+          "affectedComponents": [
+            "order-service",
+            "checkout-api"
+          ],
+          "assumptions": [
+            "The scenario latency applies equally to all synchronous callers.",
+            "Timeout impact propagates only through required synchronous dependencies.",
+            "Latency degradation is interpreted as a latency multiplier as specified.",
+            "The component is not marked as unavailable as per instruction.",
+            "No circuit breakers are associated with the order-service to consider."
+          ],
+          "explanation": "Latency impact for \"order-service\" was calculated by comparing the scenario latency with each configured synchronous timeout."
+        },
+        "telemetry": {
+          "totalLatencyMs": 8465,
+          "totalInputTokens": 1736,
+          "totalOutputTokens": 509,
+          "totalTokens": 2245,
+          "totalEstimatedCostUsd": 0.0015088,
+          "estimatedCostPer1000RequestsUsd": 1.5088,
+          "currency": "USD",
+          "calls": {
+            "architectureExtraction": {
+              "latencyMs": 6812,
+              "inputTokens": 1090,
+              "outputTokens": 407,
+              "totalTokens": 1497,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.0006512,
+                "totalCostUsd": 0.0010872,
+                "estimatedCostPer1000RequestsUsd": 1.0872,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            },
+            "scenarioInterpretation": {
+              "latencyMs": 1652,
+              "inputTokens": 646,
+              "outputTokens": 102,
+              "totalTokens": 748,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0002584,
+                "outputCostUsd": 0.0001632,
+                "totalCostUsd": 0.0004216,
+                "estimatedCostPer1000RequestsUsd": 0.4216,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "incoming-load-multiplication",
+      "category": "supported",
+      "purpose": "Verify deterministic capacity and utilization calculations.",
+      "question": "What happens if incoming load to the checkout API doubles?",
+      "allowedStatuses": [
+        "ANSWERED"
+      ],
+      "allowedScenarioTypes": [
+        "load_multiplication"
+      ],
+      "observedStatus": "ANSWERED",
+      "observedScenarioType": "load_multiplication",
+      "matchedExpectation": true,
+      "measuredWallClockMs": 9595,
+      "response": {
+        "status": "ANSWERED",
+        "reason": null,
+        "model": {
+          "modelVersion": "1.0",
+          "architectureName": "checkout-order-system",
+          "services": [
+            {
+              "id": "checkout-api",
+              "name": "checkout API",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 100
+            },
+            {
+              "id": "order-service",
+              "name": "order service",
+              "replicas": 2,
+              "capacityRpsPerReplica": 80,
+              "baselineLatencyMs": 200
+            }
+          ],
+          "dataStores": [
+            {
+              "id": "postgresql-db",
+              "name": "PostgreSQL database",
+              "type": "relational",
+              "replicas": 2,
+              "capacityRpsPerReplica": 120,
+              "baselineLatencyMs": 50
+            }
+          ],
+          "dependencies": [
+            {
+              "from": "checkout-api",
+              "to": "order-service",
+              "callType": "sync",
+              "required": true,
+              "timeoutMs": 500,
+              "retryPolicy": {
+                "maxRetries": 2,
+                "backoff": "exponential"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "order-service",
+              "to": "postgresql-db",
+              "callType": "sync",
+              "required": true,
+              "timeoutMs": 300,
+              "retryPolicy": {
+                "maxRetries": 1,
+                "backoff": "fixed"
+              },
+              "circuitBreaker": null
+            }
+          ],
+          "incomingLoadRps": 50,
+          "declaredTargets": {
+            "availabilityPercent": 99.9,
+            "maximumLatencyMs": 600,
+            "minimumThroughputRps": null
+          },
+          "assumptions": [
+            "dependencies are synchronous as stated",
+            "dependencies are required since not otherwise specified"
+          ],
+          "missingInformation": [
+            "circuit breakers presence or absence",
+            "exact retry backoff timings",
+            "minimum throughput target"
+          ],
+          "sourceEvidence": [
+            "checkout API receives 50 requests per second",
+            "checkout API has 2 replicas",
+            "each checkout API replica can process 100 requests per second",
+            "checkout API baseline latency 100 ms",
+            "checkout API synchronously calls order service with 500 ms timeout",
+            "checkout API retries twice with exponential backoff",
+            "order service has 2 replicas",
+            "order service replicas process 80 requests per second each",
+            "order service baseline latency 200 ms",
+            "order service synchronously calls PostgreSQL database with 300 ms timeout",
+            "order service retries once with linear backoff",
+            "PostgreSQL database has 2 replicas",
+            "PostgreSQL database can process 120 requests per second per replica",
+            "PostgreSQL baseline latency 50 ms",
+            "availability target 99.9%",
+            "maximum latency target 600 ms"
+          ]
+        },
+        "modelValidation": {
+          "isValid": true,
+          "errors": [],
+          "warnings": [],
           "missingInformation": []
         },
         "scenario": {
@@ -506,11 +529,13 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": 2,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "The 'incoming load' refers to the total number of requests to the checkout API.",
-            "Doubling the load implies multiplying the incoming request rate by 2."
+            "The incoming load doubling applies specifically to the checkout API component."
           ]
         },
         "result": {
@@ -551,49 +576,735 @@
             "Each dependency produces one downstream call per upstream request.",
             "Retry attempts amplify downstream load.",
             "Loads from multiple upstream paths are added together.",
-            "The 'incoming load' refers to the total number of requests to the checkout API.",
-            "Doubling the load implies multiplying the incoming request rate by 2."
+            "The incoming load doubling applies specifically to the checkout API component."
           ],
           "explanation": "The multiplied load was propagated through the dependency graph and compared with the deterministic capacity of each component."
         },
         "telemetry": {
-          "totalLatencyMs": 7769,
-          "totalInputTokens": 1329,
-          "totalOutputTokens": 498,
-          "totalTokens": 1827,
-          "totalEstimatedCostUsd": 0.0013284,
-          "estimatedCostPer1000RequestsUsd": 1.3284,
+          "totalLatencyMs": 9595,
+          "totalInputTokens": 1720,
+          "totalOutputTokens": 524,
+          "totalTokens": 2244,
+          "totalEstimatedCostUsd": 0.0015264,
+          "estimatedCostPer1000RequestsUsd": 1.5264,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 5319,
-              "inputTokens": 865,
-              "outputTokens": 420,
-              "totalTokens": 1285,
+              "latencyMs": 8087,
+              "inputTokens": 1090,
+              "outputTokens": 444,
+              "totalTokens": 1534,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.000672,
-                "totalCostUsd": 0.001018,
-                "estimatedCostPer1000RequestsUsd": 1.018,
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.0007104,
+                "totalCostUsd": 0.0011464,
+                "estimatedCostPer1000RequestsUsd": 1.1464,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2449,
-              "inputTokens": 464,
-              "outputTokens": 78,
-              "totalTokens": 542,
+              "latencyMs": 1506,
+              "inputTokens": 630,
+              "outputTokens": 80,
+              "totalTokens": 710,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001856,
-                "outputCostUsd": 0.0001248,
-                "totalCostUsd": 0.0003104,
-                "estimatedCostPer1000RequestsUsd": 0.3104,
+                "inputCostUsd": 0.000252,
+                "outputCostUsd": 0.000128,
+                "totalCostUsd": 0.00038,
+                "estimatedCostPer1000RequestsUsd": 0.38,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "async-circuit-breaker-open",
+      "category": "supported",
+      "purpose": "Verify that an open breaker blocks downstream calls and retains messages in the durable queue.",
+      "question": "What happens if the circuit breaker between notification-consumer and email-service opens?",
+      "allowedStatuses": [
+        "ANSWERED"
+      ],
+      "allowedScenarioTypes": [
+        "circuit_breaker_state_change"
+      ],
+      "observedStatus": "ANSWERED",
+      "observedScenarioType": "circuit_breaker_state_change",
+      "matchedExpectation": true,
+      "measuredWallClockMs": 7240,
+      "response": {
+        "status": "ANSWERED",
+        "reason": null,
+        "model": {
+          "modelVersion": "1.0",
+          "architectureName": "order-notification-system",
+          "services": [
+            {
+              "id": "order-api",
+              "name": "Order API",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 50
+            },
+            {
+              "id": "notification-consumer",
+              "name": "Notification Consumer",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 25
+            },
+            {
+              "id": "email-service",
+              "name": "Email Service",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 80
+            }
+          ],
+          "dataStores": [
+            {
+              "id": "notification-queue",
+              "name": "Notification Queue",
+              "type": "other",
+              "replicas": 2,
+              "capacityRpsPerReplica": 500,
+              "baselineLatencyMs": 10
+            }
+          ],
+          "dependencies": [
+            {
+              "from": "order-api",
+              "to": "notification-queue",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-queue",
+              "to": "notification-consumer",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": null,
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-consumer",
+              "to": "email-service",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": {
+                "failureThreshold": 5,
+                "openDurationMs": 30000,
+                "halfOpenMaxCalls": 1,
+                "messageBufferComponentId": "notification-queue",
+                "openBehavior": "retain_in_queue"
+              }
+            }
+          ],
+          "incomingLoadRps": 20,
+          "declaredTargets": {
+            "availabilityPercent": null,
+            "maximumLatencyMs": null,
+            "minimumThroughputRps": null
+          },
+          "assumptions": [
+            "All dependencies are required (not explicitly stated)."
+          ],
+          "missingInformation": [
+            "Timeout values for dependencies are not specified.",
+            "Declared targets for availability, latency, and throughput are not specified."
+          ],
+          "sourceEvidence": [
+            "Order API receives 20 requests per second and has 2 replicas, capacity 100 RPS/replica, latency 50 ms.",
+            "Order API publishes to notification queue asynchronously, which has 2 replicas, 500 messages/sec per replica, latency 10 ms.",
+            "Notification queue delivers messages asynchronously to notification consumer which has 2 replicas, 100 messages/sec per replica, latency 25 ms.",
+            "Notification consumer communicates asynchronously with email service through a circuit breaker.",
+            "Email service has 2 replicas, capacity 100 messages/sec per replica, latency 80 ms.",
+            "Circuit breaker opens after 5 consecutive failures, stays open for 30 seconds, allows 1 probe call when half-open.",
+            "While circuit breaker is open, messages remain in notification queue and order API is not blocked.",
+            "All dependencies have zero retries."
+          ]
+        },
+        "modelValidation": {
+          "isValid": true,
+          "errors": [],
+          "warnings": [],
+          "missingInformation": [
+            {
+              "code": "MISSING_RETRY_POLICY",
+              "message": "Retry policy is missing for \"notification-queue\" to \"notification-consumer\".",
+              "path": "notification-queue->notification-consumer"
+            }
+          ]
+        },
+        "scenario": {
+          "type": "circuit_breaker_state_change",
+          "componentId": null,
+          "newLatencyMs": null,
+          "latencyMultiplier": null,
+          "loadMultiplier": null,
+          "circuitBreakerFrom": "notification-consumer",
+          "circuitBreakerTo": "email-service",
+          "circuitBreakerState": "open",
+          "unsupportedReason": null,
+          "missingInformation": [],
+          "assumptions": [
+            "The circuit breaker described is between notification-consumer and email-service as provided.",
+            "The question explicitly asks about the circuit breaker opening scenario.",
+            "The change is that the circuit breaker state changes to 'open'."
+          ]
+        },
+        "result": {
+          "status": "ANSWERED",
+          "scenarioType": "circuit_breaker_state_change",
+          "rootCause": "notification-consumer->email-service",
+          "circuitBreakerState": "open",
+          "protectedDependency": {
+            "from": "notification-consumer",
+            "to": "email-service",
+            "callType": "async"
+          },
+          "circuitBreakerConfiguration": {
+            "failureThreshold": 5,
+            "openDurationMs": 30000,
+            "halfOpenMaxCalls": 1,
+            "openBehavior": "retain_in_queue"
+          },
+          "messageBufferComponentId": "notification-queue",
+          "downstreamCallsAllowed": false,
+          "allowedProbeCalls": 0,
+          "queueConsumption": "paused",
+          "messageDisposition": "retain_in_queue",
+          "upstreamRequestBlocked": false,
+          "affectedComponents": [
+            "email-service"
+          ],
+          "protectedComponents": [
+            "notification-consumer"
+          ],
+          "assumptions": [
+            "The requested circuit-breaker state is evaluated as a steady-state snapshot.",
+            "The message buffer remains available during the scenario.",
+            "Queue depth and recovery time are not simulated.",
+            "The circuit breaker described is between notification-consumer and email-service as provided.",
+            "The question explicitly asks about the circuit breaker opening scenario.",
+            "The change is that the circuit breaker state changes to 'open'."
+          ],
+          "explanation": "Circuit breaker on \"notification-consumer\" to \"email-service\" is open. Downstream calls are blocked; message handling is \"retain_in_queue\"."
+        },
+        "telemetry": {
+          "totalLatencyMs": 7240,
+          "totalInputTokens": 1817,
+          "totalOutputTokens": 659,
+          "totalTokens": 2476,
+          "totalEstimatedCostUsd": 0.0017812,
+          "estimatedCostPer1000RequestsUsd": 1.7812,
+          "currency": "USD",
+          "calls": {
+            "architectureExtraction": {
+              "latencyMs": 4207,
+              "inputTokens": 1137,
+              "outputTokens": 548,
+              "totalTokens": 1685,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0004548,
+                "outputCostUsd": 0.0008768,
+                "totalCostUsd": 0.0013316,
+                "estimatedCostPer1000RequestsUsd": 1.3316,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            },
+            "scenarioInterpretation": {
+              "latencyMs": 3031,
+              "inputTokens": 680,
+              "outputTokens": 111,
+              "totalTokens": 791,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.000272,
+                "outputCostUsd": 0.0001776,
+                "totalCostUsd": 0.0004496,
+                "estimatedCostPer1000RequestsUsd": 0.4496,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "async-circuit-breaker-half-open",
+      "category": "supported",
+      "purpose": "Verify limited probe calls while non-probe messages remain queued.",
+      "question": "What happens when the circuit breaker between notification-consumer and email-service enters half-open state?",
+      "allowedStatuses": [
+        "ANSWERED"
+      ],
+      "allowedScenarioTypes": [
+        "circuit_breaker_state_change"
+      ],
+      "observedStatus": "ANSWERED",
+      "observedScenarioType": "circuit_breaker_state_change",
+      "matchedExpectation": true,
+      "measuredWallClockMs": 6197,
+      "response": {
+        "status": "ANSWERED",
+        "reason": null,
+        "model": {
+          "modelVersion": "1.0",
+          "architectureName": "order-api-notification-system",
+          "services": [
+            {
+              "id": "order-api",
+              "name": "order API",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 50
+            },
+            {
+              "id": "notification-consumer",
+              "name": "notification consumer",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 25
+            },
+            {
+              "id": "email-service",
+              "name": "email service",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 80
+            }
+          ],
+          "dataStores": [
+            {
+              "id": "notification-queue",
+              "name": "notification queue",
+              "type": "other",
+              "replicas": 2,
+              "capacityRpsPerReplica": 500,
+              "baselineLatencyMs": 10
+            }
+          ],
+          "dependencies": [
+            {
+              "from": "order-api",
+              "to": "notification-queue",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-queue",
+              "to": "notification-consumer",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-consumer",
+              "to": "email-service",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": {
+                "failureThreshold": 5,
+                "openDurationMs": 30000,
+                "halfOpenMaxCalls": 1,
+                "messageBufferComponentId": "notification-queue",
+                "openBehavior": "retain_in_queue"
+              }
+            }
+          ],
+          "incomingLoadRps": 20,
+          "declaredTargets": {
+            "availabilityPercent": null,
+            "maximumLatencyMs": null,
+            "minimumThroughputRps": null
+          },
+          "assumptions": [
+            "All dependencies are asynchronous as explicitly stated or implied by message queues.",
+            "Dependencies are required by default as not stated otherwise."
+          ],
+          "missingInformation": [
+            "Timeout values for dependencies are not specified.",
+            "Availability targets are not provided.",
+            "Maximum latency and throughput targets are not specified."
+          ],
+          "sourceEvidence": [
+            "Order API receives 20 requests per second with 2 replicas at 100 RPS each and 50 ms latency.",
+            "Order API publishes asynchronously to a durable notification queue with 2 replicas at 500 msg/s and 10 ms latency.",
+            "Notification queue delivers messages asynchronously to notification consumer with 2 replicas at 100 msg/s and 25 ms latency.",
+            "Notification consumer communicates asynchronously with email service through a circuit breaker.",
+            "Email service has 2 replicas at 100 msg/s and 80 ms latency.",
+            "Circuit breaker opens after 5 consecutive failures, stays open for 30 seconds, allows 1 probe call while half-open.",
+            "While breaker is open, messages remain in the notification queue and the order API is not blocked.",
+            "All dependencies have zero retries."
+          ]
+        },
+        "modelValidation": {
+          "isValid": true,
+          "errors": [],
+          "warnings": [],
+          "missingInformation": []
+        },
+        "scenario": {
+          "type": "circuit_breaker_state_change",
+          "componentId": null,
+          "newLatencyMs": null,
+          "latencyMultiplier": null,
+          "loadMultiplier": null,
+          "circuitBreakerFrom": "notification-consumer",
+          "circuitBreakerTo": "email-service",
+          "circuitBreakerState": "half_open",
+          "unsupportedReason": null,
+          "missingInformation": [],
+          "assumptions": [
+            "The question specifically mentions the circuit breaker between notification-consumer and email-service, which exists in availableCircuitBreakers.",
+            "The state change is to half-open as stated in the question."
+          ]
+        },
+        "result": {
+          "status": "ANSWERED",
+          "scenarioType": "circuit_breaker_state_change",
+          "rootCause": "notification-consumer->email-service",
+          "circuitBreakerState": "half_open",
+          "protectedDependency": {
+            "from": "notification-consumer",
+            "to": "email-service",
+            "callType": "async"
+          },
+          "circuitBreakerConfiguration": {
+            "failureThreshold": 5,
+            "openDurationMs": 30000,
+            "halfOpenMaxCalls": 1,
+            "openBehavior": "retain_in_queue"
+          },
+          "messageBufferComponentId": "notification-queue",
+          "downstreamCallsAllowed": true,
+          "allowedProbeCalls": 1,
+          "queueConsumption": "probe_only",
+          "messageDisposition": "retain_non_probe_messages_in_queue",
+          "upstreamRequestBlocked": false,
+          "affectedComponents": [
+            "email-service"
+          ],
+          "protectedComponents": [
+            "notification-consumer"
+          ],
+          "assumptions": [
+            "The requested circuit-breaker state is evaluated as a steady-state snapshot.",
+            "The message buffer remains available during the scenario.",
+            "Queue depth and recovery time are not simulated.",
+            "The question specifically mentions the circuit breaker between notification-consumer and email-service, which exists in availableCircuitBreakers.",
+            "The state change is to half-open as stated in the question."
+          ],
+          "explanation": "Circuit breaker on \"notification-consumer\" to \"email-service\" is half_open. Downstream calls are allowed; message handling is \"retain_non_probe_messages_in_queue\"."
+        },
+        "telemetry": {
+          "totalLatencyMs": 6197,
+          "totalInputTokens": 1820,
+          "totalOutputTokens": 671,
+          "totalTokens": 2491,
+          "totalEstimatedCostUsd": 0.0018016,
+          "estimatedCostPer1000RequestsUsd": 1.8016,
+          "currency": "USD",
+          "calls": {
+            "architectureExtraction": {
+              "latencyMs": 4388,
+              "inputTokens": 1137,
+              "outputTokens": 562,
+              "totalTokens": 1699,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0004548,
+                "outputCostUsd": 0.0008992,
+                "totalCostUsd": 0.001354,
+                "estimatedCostPer1000RequestsUsd": 1.354,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            },
+            "scenarioInterpretation": {
+              "latencyMs": 1808,
+              "inputTokens": 683,
+              "outputTokens": 109,
+              "totalTokens": 792,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0002732,
+                "outputCostUsd": 0.0001744,
+                "totalCostUsd": 0.0004476,
+                "estimatedCostPer1000RequestsUsd": 0.4476,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "async-circuit-breaker-recovery",
+      "category": "supported",
+      "purpose": "Verify deterministic recovery to normal downstream delivery.",
+      "question": "What happens when the circuit breaker between notification-consumer and email-service closes after recovery?",
+      "allowedStatuses": [
+        "ANSWERED"
+      ],
+      "allowedScenarioTypes": [
+        "circuit_breaker_state_change"
+      ],
+      "observedStatus": "ANSWERED",
+      "observedScenarioType": "circuit_breaker_state_change",
+      "matchedExpectation": true,
+      "measuredWallClockMs": 11901,
+      "response": {
+        "status": "ANSWERED",
+        "reason": null,
+        "model": {
+          "modelVersion": "1.0",
+          "architectureName": "order notification system",
+          "services": [
+            {
+              "id": "order-api",
+              "name": "Order API",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 50
+            },
+            {
+              "id": "notification-consumer",
+              "name": "Notification Consumer",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 25
+            },
+            {
+              "id": "email-service",
+              "name": "Email Service",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 80
+            }
+          ],
+          "dataStores": [
+            {
+              "id": "notification-queue",
+              "name": "Notification Queue",
+              "type": "other",
+              "replicas": 2,
+              "capacityRpsPerReplica": 500,
+              "baselineLatencyMs": 10
+            }
+          ],
+          "dependencies": [
+            {
+              "from": "order-api",
+              "to": "notification-queue",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-queue",
+              "to": "notification-consumer",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "notification-consumer",
+              "to": "email-service",
+              "callType": "async",
+              "required": true,
+              "timeoutMs": null,
+              "retryPolicy": {
+                "maxRetries": 0,
+                "backoff": "none"
+              },
+              "circuitBreaker": {
+                "failureThreshold": 5,
+                "openDurationMs": 30000,
+                "halfOpenMaxCalls": 1,
+                "messageBufferComponentId": "notification-queue",
+                "openBehavior": "retain_in_queue"
+              }
+            }
+          ],
+          "incomingLoadRps": 20,
+          "declaredTargets": {
+            "availabilityPercent": null,
+            "maximumLatencyMs": null,
+            "minimumThroughputRps": null
+          },
+          "assumptions": [
+            "dependencies call type set to async as explicitly described; no need to assume sync",
+            "all dependencies are required as a conservative assumption"
+          ],
+          "missingInformation": [
+            "timeouts for dependencies not specified",
+            "capacity refers to requests per second or messages per second, assumed equivalent",
+            "capacity of the email-service stated as messages per second, assumed compatible with notification-consumer output type"
+          ],
+          "sourceEvidence": [
+            "Order API receives 20 requests per second and publishes notification messages asynchronously",
+            "Order API has 2 replicas, capacity 100 requests per second per replica, baseline latency 50 ms",
+            "Notification queue has 2 replicas, capacity 500 messages per second per replica, baseline latency 10 ms",
+            "Notification queue delivers messages asynchronously to notification consumer",
+            "Notification consumer has 2 replicas, capacity 100 messages per second per replica, baseline latency 25 ms",
+            "Notification consumer communicates asynchronously with email service through circuit breaker",
+            "Email service has 2 replicas, capacity 100 messages per second per replica, baseline latency 80 ms",
+            "Circuit breaker opens after 5 consecutive failures, stays open 30 seconds, allows 1 probe call when half-open",
+            "When breaker open, messages remain in notification queue; order API not blocked",
+            "All dependencies have zero retries"
+          ]
+        },
+        "modelValidation": {
+          "isValid": true,
+          "errors": [],
+          "warnings": [],
+          "missingInformation": []
+        },
+        "scenario": {
+          "type": "circuit_breaker_state_change",
+          "componentId": null,
+          "newLatencyMs": null,
+          "latencyMultiplier": null,
+          "loadMultiplier": null,
+          "circuitBreakerFrom": "notification-consumer",
+          "circuitBreakerTo": "email-service",
+          "circuitBreakerState": "closed",
+          "unsupportedReason": null,
+          "missingInformation": [],
+          "assumptions": [
+            "The question refers to the circuit breaker from 'notification-consumer' to 'email-service' as per the availableCircuitBreakers.",
+            "Closing the circuit breaker after recovery implies the new state is 'closed'."
+          ]
+        },
+        "result": {
+          "status": "ANSWERED",
+          "scenarioType": "circuit_breaker_state_change",
+          "rootCause": "notification-consumer->email-service",
+          "circuitBreakerState": "closed",
+          "protectedDependency": {
+            "from": "notification-consumer",
+            "to": "email-service",
+            "callType": "async"
+          },
+          "circuitBreakerConfiguration": {
+            "failureThreshold": 5,
+            "openDurationMs": 30000,
+            "halfOpenMaxCalls": 1,
+            "openBehavior": "retain_in_queue"
+          },
+          "messageBufferComponentId": "notification-queue",
+          "downstreamCallsAllowed": true,
+          "allowedProbeCalls": null,
+          "queueConsumption": "resumed",
+          "messageDisposition": "normal_delivery",
+          "upstreamRequestBlocked": false,
+          "affectedComponents": [],
+          "protectedComponents": [
+            "notification-consumer"
+          ],
+          "assumptions": [
+            "The requested circuit-breaker state is evaluated as a steady-state snapshot.",
+            "The message buffer remains available during the scenario.",
+            "Queue depth and recovery time are not simulated.",
+            "The question refers to the circuit breaker from 'notification-consumer' to 'email-service' as per the availableCircuitBreakers.",
+            "Closing the circuit breaker after recovery implies the new state is 'closed'."
+          ],
+          "explanation": "Circuit breaker on \"notification-consumer\" to \"email-service\" is closed. Downstream calls are allowed; message handling is \"normal_delivery\"."
+        },
+        "telemetry": {
+          "totalLatencyMs": 11901,
+          "totalInputTokens": 1819,
+          "totalOutputTokens": 707,
+          "totalTokens": 2526,
+          "totalEstimatedCostUsd": 0.0018588,
+          "estimatedCostPer1000RequestsUsd": 1.8588,
+          "currency": "USD",
+          "calls": {
+            "architectureExtraction": {
+              "latencyMs": 9947,
+              "inputTokens": 1137,
+              "outputTokens": 595,
+              "totalTokens": 1732,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0004548,
+                "outputCostUsd": 0.000952,
+                "totalCostUsd": 0.0014068,
+                "estimatedCostPer1000RequestsUsd": 1.4068,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            },
+            "scenarioInterpretation": {
+              "latencyMs": 1953,
+              "inputTokens": 682,
+              "outputTokens": 112,
+              "totalTokens": 794,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0002728,
+                "outputCostUsd": 0.0001792,
+                "totalCostUsd": 0.000452,
+                "estimatedCostPer1000RequestsUsd": 0.452,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -615,7 +1326,7 @@
       "observedStatus": "NOT_ANSWERABLE",
       "observedScenarioType": "latency_degradation",
       "matchedExpectation": true,
-      "measuredWallClockMs": 5608,
+      "measuredWallClockMs": 3289,
       "response": {
         "status": "NOT_ANSWERABLE",
         "reason": "A latency multiplier requires the baseline component latency.",
@@ -649,7 +1360,8 @@
               "retryPolicy": {
                 "maxRetries": 1,
                 "backoff": "fixed"
-              }
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 40,
@@ -659,21 +1371,17 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "The dependency call from public-api to payment-service is synchronous as stated.",
-            "The call from public-api to payment-service is required (assumed)."
+            "dependencies default to required unless otherwise specified"
           ],
           "missingInformation": [
-            "Baseline latency for public-api and payment-service.",
-            "Availability targets for the system.",
-            "Maximum latency targets for the system.",
-            "Minimum throughput target."
+            "baseline latency for services",
+            "availability targets",
+            "maximum latency targets"
           ],
           "sourceEvidence": [
             "A public API receives 40 requests per second.",
-            "It has 2 replicas and each replica can process 100 requests per second.",
             "The API synchronously calls a payment service with a 400 millisecond timeout and one retry with linear backoff.",
-            "The payment service has 2 replicas and each replica can process 70 requests per second.",
-            "No baseline latency information is available."
+            "The payment service has 2 replicas and each replica can process 70 requests per second."
           ]
         },
         "modelValidation": {
@@ -699,11 +1407,13 @@
           "newLatencyMs": null,
           "latencyMultiplier": 2,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "Doubling the latency means multiplying the existing latency by 2",
-            "The question asks about latency increase only, no load or unavailability changes"
+            "Latency doubling means the latency multiplier is 2"
           ]
         },
         "result": {
@@ -716,43 +1426,43 @@
           "assumptions": []
         },
         "telemetry": {
-          "totalLatencyMs": 5608,
-          "totalInputTokens": 1225,
-          "totalOutputTokens": 372,
-          "totalTokens": 1597,
-          "totalEstimatedCostUsd": 0.0010852,
-          "estimatedCostPer1000RequestsUsd": 1.0852,
+          "totalLatencyMs": 3289,
+          "totalInputTokens": 1616,
+          "totalOutputTokens": 324,
+          "totalTokens": 1940,
+          "totalEstimatedCostUsd": 0.0011648,
+          "estimatedCostPer1000RequestsUsd": 1.1648,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 3707,
-              "inputTokens": 781,
-              "outputTokens": 298,
-              "totalTokens": 1079,
+              "latencyMs": 2113,
+              "inputTokens": 1006,
+              "outputTokens": 247,
+              "totalTokens": 1253,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0003124,
-                "outputCostUsd": 0.0004768,
-                "totalCostUsd": 0.0007892,
-                "estimatedCostPer1000RequestsUsd": 0.7892,
+                "inputCostUsd": 0.0004024,
+                "outputCostUsd": 0.0003952,
+                "totalCostUsd": 0.0007976,
+                "estimatedCostPer1000RequestsUsd": 0.7976,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 1900,
-              "inputTokens": 444,
-              "outputTokens": 74,
-              "totalTokens": 518,
+              "latencyMs": 1175,
+              "inputTokens": 610,
+              "outputTokens": 77,
+              "totalTokens": 687,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001776,
-                "outputCostUsd": 0.0001184,
-                "totalCostUsd": 0.000296,
-                "estimatedCostPer1000RequestsUsd": 0.296,
+                "inputCostUsd": 0.000244,
+                "outputCostUsd": 0.0001232,
+                "totalCostUsd": 0.0003672,
+                "estimatedCostPer1000RequestsUsd": 0.3672,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -772,13 +1482,13 @@
       "observedStatus": "NOT_ANSWERABLE",
       "observedScenarioType": "component_unavailable",
       "matchedExpectation": true,
-      "measuredWallClockMs": 8582,
+      "measuredWallClockMs": 4498,
       "response": {
         "status": "NOT_ANSWERABLE",
         "reason": "The scenario question is missing required information.",
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "checkout system",
+          "architectureName": "checkout-order system",
           "services": [
             {
               "id": "checkout-api",
@@ -815,7 +1525,8 @@
               "retryPolicy": {
                 "maxRetries": 2,
                 "backoff": "exponential"
-              }
+              },
+              "circuitBreaker": null
             },
             {
               "from": "order-service",
@@ -826,7 +1537,8 @@
               "retryPolicy": {
                 "maxRetries": 1,
                 "backoff": "fixed"
-              }
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 50,
@@ -835,23 +1547,22 @@
             "maximumLatencyMs": 600,
             "minimumThroughputRps": null
           },
-          "assumptions": [],
+          "assumptions": [
+            "dependencies callType assumed sync due to synchronous calling language",
+            "dependencies required assumed true due to synchronous calling language"
+          ],
           "missingInformation": [
-            "baseline latency for PostgreSQL latency impact with retries",
-            "order service baseline latency impact with retries",
-            "whether the checkout API has any retries on calls",
-            "whether dependencies are required (assumed true)",
-            "minimum throughput targets"
+            "circuit breaker configurations for dependencies",
+            "minimum throughput target"
           ],
           "sourceEvidence": [
             "checkout API receives 50 requests per second",
-            "checkout API has 2 replicas, 100 RPS per replica, latency 100 ms",
-            "checkout API synchronously calls order service with 500ms timeout and 2 retries with exponential backoff",
-            "order service has 2 replicas, 80 RPS per replica, latency 200 ms",
-            "order service synchronously calls PostgreSQL with 300ms timeout and 1 retry with linear backoff",
-            "PostgreSQL has 2 replicas, 120 RPS per replica, latency 50 ms",
-            "availability target is 99.9 percent",
-            "maximum latency is 600 milliseconds"
+            "checkout API has 2 replicas, each can process 100 RPS, baseline latency 100 ms",
+            "checkout API synchronously calls order service with 500 ms timeout and 2 retries exponential backoff",
+            "order service has 2 replicas, each can process 80 RPS, baseline latency 200 ms",
+            "order service synchronously calls PostgreSQL with 300 ms timeout and 1 retry linear (fixed) backoff",
+            "PostgreSQL has 2 replicas, each can process 120 RPS, baseline latency 50 ms",
+            "availability target 99.9%, maximum latency 600 ms"
           ]
         },
         "modelValidation": {
@@ -862,17 +1573,19 @@
         },
         "scenario": {
           "type": "component_unavailable",
-          "componentId": "inventory service",
+          "componentId": null,
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [
-            "Component 'inventory service' is not present in the availableComponents list."
+            "Component 'inventory service' is not listed in availableComponents."
           ],
           "assumptions": [
-            "The question intends 'inventory service' to be a component whose unavailability is being queried.",
-            "Since 'inventory service' is not found in availableComponents, its unavailability impact cannot be referenced to a known component."
+            "The question refers to a component named 'inventory service' that is not present in the provided availableComponents list."
           ]
         },
         "result": {
@@ -880,48 +1593,48 @@
           "scenarioType": "component_unavailable",
           "reason": "The scenario question is missing required information.",
           "missingInformation": [
-            "Component 'inventory service' is not present in the availableComponents list."
+            "Component 'inventory service' is not listed in availableComponents."
           ],
           "assumptions": []
         },
         "telemetry": {
-          "totalLatencyMs": 8582,
-          "totalInputTokens": 1327,
-          "totalOutputTokens": 514,
-          "totalTokens": 1841,
-          "totalEstimatedCostUsd": 0.0013532,
-          "estimatedCostPer1000RequestsUsd": 1.3532,
+          "totalLatencyMs": 4498,
+          "totalInputTokens": 1718,
+          "totalOutputTokens": 520,
+          "totalTokens": 2238,
+          "totalEstimatedCostUsd": 0.0015192,
+          "estimatedCostPer1000RequestsUsd": 1.5192,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 6292,
-              "inputTokens": 865,
-              "outputTokens": 412,
-              "totalTokens": 1277,
+              "latencyMs": 3160,
+              "inputTokens": 1090,
+              "outputTokens": 420,
+              "totalTokens": 1510,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.0006592,
-                "totalCostUsd": 0.0010052,
-                "estimatedCostPer1000RequestsUsd": 1.0052,
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.000672,
+                "totalCostUsd": 0.001108,
+                "estimatedCostPer1000RequestsUsd": 1.108,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2289,
-              "inputTokens": 462,
-              "outputTokens": 102,
-              "totalTokens": 564,
+              "latencyMs": 1337,
+              "inputTokens": 628,
+              "outputTokens": 100,
+              "totalTokens": 728,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001848,
-                "outputCostUsd": 0.0001632,
-                "totalCostUsd": 0.000348,
-                "estimatedCostPer1000RequestsUsd": 0.348,
+                "inputCostUsd": 0.0002512,
+                "outputCostUsd": 0.00016,
+                "totalCostUsd": 0.0004112,
+                "estimatedCostPer1000RequestsUsd": 0.4112,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -943,13 +1656,180 @@
       "observedStatus": "NOT_ANSWERABLE",
       "observedScenarioType": "unsupported",
       "matchedExpectation": true,
-      "measuredWallClockMs": 7898,
+      "measuredWallClockMs": 4556,
       "response": {
         "status": "NOT_ANSWERABLE",
-        "reason": "The question is about choice of programming language, which is outside the scope of supported scenario types (component_unavailable, latency_degradation, load_multiplication).",
+        "reason": "The question asks about choosing a programming language, which does not relate to any supported scenario types: component_unavailable, latency_degradation, load_multiplication, or circuit_breaker_state_change.",
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "checkout-order-system",
+          "architectureName": "checkout system",
+          "services": [
+            {
+              "id": "checkout-api",
+              "name": "Checkout API",
+              "replicas": 2,
+              "capacityRpsPerReplica": 100,
+              "baselineLatencyMs": 100
+            },
+            {
+              "id": "order-service",
+              "name": "Order Service",
+              "replicas": 2,
+              "capacityRpsPerReplica": 80,
+              "baselineLatencyMs": 200
+            }
+          ],
+          "dataStores": [
+            {
+              "id": "postgres-db",
+              "name": "PostgreSQL Database",
+              "type": "relational",
+              "replicas": 2,
+              "capacityRpsPerReplica": 120,
+              "baselineLatencyMs": 50
+            }
+          ],
+          "dependencies": [
+            {
+              "from": "checkout-api",
+              "to": "order-service",
+              "callType": "sync",
+              "required": true,
+              "timeoutMs": 500,
+              "retryPolicy": {
+                "maxRetries": 2,
+                "backoff": "exponential"
+              },
+              "circuitBreaker": null
+            },
+            {
+              "from": "order-service",
+              "to": "postgres-db",
+              "callType": "sync",
+              "required": true,
+              "timeoutMs": 300,
+              "retryPolicy": {
+                "maxRetries": 1,
+                "backoff": "fixed"
+              },
+              "circuitBreaker": null
+            }
+          ],
+          "incomingLoadRps": 50,
+          "declaredTargets": {
+            "availabilityPercent": 99.9,
+            "maximumLatencyMs": 600,
+            "minimumThroughputRps": null
+          },
+          "assumptions": [
+            "Dependencies are synchronous as specified.",
+            "Retry backoff of 'linear' is interpreted as 'fixed' per standard terminology."
+          ],
+          "missingInformation": [
+            "No circuit breaker configurations were specified."
+          ],
+          "sourceEvidence": [
+            "The checkout API receives 50 requests per second.",
+            "Checkout API has 2 replicas, each processing 100 requests per second, baseline latency 100 ms.",
+            "Checkout API synchronously calls order service with 500 ms timeout and 2 retries with exponential backoff.",
+            "Order service has 2 replicas, each 80 requests per second, baseline latency 200 ms.",
+            "Order service synchronously calls PostgreSQL db with 300 ms timeout and 1 retry with linear backoff.",
+            "PostgreSQL database has 2 replicas, each 120 requests per second, baseline latency 50 ms.",
+            "Availability target is 99.9% and max latency 600 ms."
+          ]
+        },
+        "modelValidation": {
+          "isValid": true,
+          "errors": [],
+          "warnings": [],
+          "missingInformation": []
+        },
+        "scenario": {
+          "type": "unsupported",
+          "componentId": null,
+          "newLatencyMs": null,
+          "latencyMultiplier": null,
+          "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
+          "unsupportedReason": "The question asks about choosing a programming language, which does not relate to any supported scenario types: component_unavailable, latency_degradation, load_multiplication, or circuit_breaker_state_change.",
+          "missingInformation": [],
+          "assumptions": [
+            "The question is about a technology choice outside the scope of architecture impact scenarios."
+          ]
+        },
+        "result": {
+          "status": "NOT_ANSWERABLE",
+          "scenarioType": "unsupported",
+          "reason": "The question asks about choosing a programming language, which does not relate to any supported scenario types: component_unavailable, latency_degradation, load_multiplication, or circuit_breaker_state_change.",
+          "missingInformation": [],
+          "assumptions": []
+        },
+        "telemetry": {
+          "totalLatencyMs": 4556,
+          "totalInputTokens": 1717,
+          "totalOutputTokens": 534,
+          "totalTokens": 2251,
+          "totalEstimatedCostUsd": 0.0015412,
+          "estimatedCostPer1000RequestsUsd": 1.5412,
+          "currency": "USD",
+          "calls": {
+            "architectureExtraction": {
+              "latencyMs": 3179,
+              "inputTokens": 1090,
+              "outputTokens": 418,
+              "totalTokens": 1508,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.0006688,
+                "totalCostUsd": 0.0011048,
+                "estimatedCostPer1000RequestsUsd": 1.1048,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            },
+            "scenarioInterpretation": {
+              "latencyMs": 1377,
+              "inputTokens": 627,
+              "outputTokens": 116,
+              "totalTokens": 743,
+              "cost": {
+                "model": "gpt-4.1-mini",
+                "deploymentType": "GlobalStandard",
+                "currency": "USD",
+                "inputCostUsd": 0.0002508,
+                "outputCostUsd": 0.0001856,
+                "totalCostUsd": 0.0004364,
+                "estimatedCostPer1000RequestsUsd": 0.4364,
+                "pricingVerifiedOn": "2026-09-02"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ambiguous-pronoun",
+      "category": "ambiguous-input",
+      "purpose": "Verify that ambiguous component references are not silently invented.",
+      "question": "What happens if it fails?",
+      "allowedStatuses": [
+        "NOT_ANSWERABLE"
+      ],
+      "allowedScenarioTypes": null,
+      "observedStatus": "NOT_ANSWERABLE",
+      "observedScenarioType": "component_unavailable",
+      "matchedExpectation": true,
+      "measuredWallClockMs": 6930,
+      "response": {
+        "status": "NOT_ANSWERABLE",
+        "reason": "The scenario question is missing required information.",
+        "model": {
+          "modelVersion": "1.0",
+          "architectureName": "checkout system",
           "services": [
             {
               "id": "checkout-api",
@@ -986,173 +1866,8 @@
               "retryPolicy": {
                 "maxRetries": 2,
                 "backoff": "exponential"
-              }
-            },
-            {
-              "from": "order-service",
-              "to": "postgresql-db",
-              "callType": "sync",
-              "required": true,
-              "timeoutMs": 300,
-              "retryPolicy": {
-                "maxRetries": 1,
-                "backoff": "none"
-              }
-            }
-          ],
-          "incomingLoadRps": 50,
-          "declaredTargets": {
-            "availabilityPercent": 99.9,
-            "maximumLatencyMs": 600,
-            "minimumThroughputRps": null
-          },
-          "assumptions": [
-            "Dependencies are required by default.",
-            "Call types are synchronous unless otherwise specified."
-          ],
-          "missingInformation": [
-            "Minimum throughput target is not specified."
-          ],
-          "sourceEvidence": [
-            "Checkout API receives 50 requests per second.",
-            "Checkout API has 2 replicas, each handling 100 requests per second, baseline latency 100 ms.",
-            "Checkout API synchronously calls order service, timeout 500 ms, retries twice with exponential backoff.",
-            "Order service has 2 replicas, each handling 80 requests per second, baseline latency 200 ms.",
-            "Order service synchronously calls PostgreSQL DB, timeout 300 ms, retries once with linear backoff.",
-            "PostgreSQL DB has 2 replicas, each handling 120 requests per second, baseline latency 50 ms.",
-            "Availability target is 99.9 percent, maximum latency 600 ms."
-          ]
-        },
-        "modelValidation": {
-          "isValid": true,
-          "errors": [],
-          "warnings": [
-            {
-              "code": "RETRIES_WITHOUT_BACKOFF",
-              "message": "Dependency \"order-service\" to \"postgresql-db\" retries without backoff.",
-              "path": "order-service->postgresql-db"
-            }
-          ],
-          "missingInformation": []
-        },
-        "scenario": {
-          "type": "unsupported",
-          "componentId": null,
-          "newLatencyMs": null,
-          "latencyMultiplier": null,
-          "loadMultiplier": null,
-          "unsupportedReason": "The question is about choice of programming language, which is outside the scope of supported scenario types (component_unavailable, latency_degradation, load_multiplication).",
-          "missingInformation": [],
-          "assumptions": []
-        },
-        "result": {
-          "status": "NOT_ANSWERABLE",
-          "scenarioType": "unsupported",
-          "reason": "The question is about choice of programming language, which is outside the scope of supported scenario types (component_unavailable, latency_degradation, load_multiplication).",
-          "missingInformation": [],
-          "assumptions": []
-        },
-        "telemetry": {
-          "totalLatencyMs": 7898,
-          "totalInputTokens": 1327,
-          "totalOutputTokens": 471,
-          "totalTokens": 1798,
-          "totalEstimatedCostUsd": 0.0012844,
-          "estimatedCostPer1000RequestsUsd": 1.2844,
-          "currency": "USD",
-          "calls": {
-            "architectureExtraction": {
-              "latencyMs": 5738,
-              "inputTokens": 865,
-              "outputTokens": 398,
-              "totalTokens": 1263,
-              "cost": {
-                "model": "gpt-4.1-mini",
-                "deploymentType": "GlobalStandard",
-                "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.0006368,
-                "totalCostUsd": 0.0009828,
-                "estimatedCostPer1000RequestsUsd": 0.9828,
-                "pricingVerifiedOn": "2026-09-02"
-              }
-            },
-            "scenarioInterpretation": {
-              "latencyMs": 2159,
-              "inputTokens": 462,
-              "outputTokens": 73,
-              "totalTokens": 535,
-              "cost": {
-                "model": "gpt-4.1-mini",
-                "deploymentType": "GlobalStandard",
-                "currency": "USD",
-                "inputCostUsd": 0.0001848,
-                "outputCostUsd": 0.0001168,
-                "totalCostUsd": 0.0003016,
-                "estimatedCostPer1000RequestsUsd": 0.3016,
-                "pricingVerifiedOn": "2026-09-02"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "id": "ambiguous-pronoun",
-      "category": "ambiguous-input",
-      "purpose": "Verify that ambiguous component references are not silently invented.",
-      "question": "What happens if it fails?",
-      "allowedStatuses": [
-        "NOT_ANSWERABLE"
-      ],
-      "allowedScenarioTypes": null,
-      "observedStatus": "NOT_ANSWERABLE",
-      "observedScenarioType": "component_unavailable",
-      "matchedExpectation": true,
-      "measuredWallClockMs": 8601,
-      "response": {
-        "status": "NOT_ANSWERABLE",
-        "reason": "The scenario question is missing required information.",
-        "model": {
-          "modelVersion": "1.0",
-          "architectureName": "checkout system",
-          "services": [
-            {
-              "id": "checkout-api",
-              "name": "checkout API",
-              "replicas": 2,
-              "capacityRpsPerReplica": 100,
-              "baselineLatencyMs": 100
-            },
-            {
-              "id": "order-service",
-              "name": "order service",
-              "replicas": 2,
-              "capacityRpsPerReplica": 80,
-              "baselineLatencyMs": 200
-            }
-          ],
-          "dataStores": [
-            {
-              "id": "postgresql-db",
-              "name": "PostgreSQL database",
-              "type": "relational",
-              "replicas": 2,
-              "capacityRpsPerReplica": 120,
-              "baselineLatencyMs": 50
-            }
-          ],
-          "dependencies": [
-            {
-              "from": "checkout-api",
-              "to": "order-service",
-              "callType": "sync",
-              "required": true,
-              "timeoutMs": 500,
-              "retryPolicy": {
-                "maxRetries": 2,
-                "backoff": "exponential"
-              }
+              },
+              "circuitBreaker": null
             },
             {
               "from": "order-service",
@@ -1163,7 +1878,8 @@
               "retryPolicy": {
                 "maxRetries": 1,
                 "backoff": "fixed"
-              }
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 50,
@@ -1173,20 +1889,24 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "All described calls are required"
+            "sync call types assumed from context",
+            "dependencies are required unless stated otherwise"
           ],
           "missingInformation": [
-            "Minimum throughput target",
-            "Whether retry backoff for PostgreSQL is 'fixed' or 'linear' is interpreted as fixed"
+            "latency impact of retries",
+            "circuit breaker details if any",
+            "throughput targets for services"
           ],
           "sourceEvidence": [
-            "The checkout API synchronously calls an order service with a 500 millisecond timeout and retries twice using exponential backoff.",
-            "The order service synchronously calls a PostgreSQL database with a 300 millisecond timeout and retries once using linear backoff.",
-            "The checkout API receives 50 requests per second.",
-            "The checkout API has 2 replicas, each replica can process 100 requests per second, and its baseline latency is 100 milliseconds.",
-            "The order service has 2 replicas, each replica can process 80 requests per second, and its baseline latency is 200 milliseconds.",
-            "The PostgreSQL database has 2 replicas, each replica can process 120 requests per second, and its baseline latency is 50 milliseconds.",
-            "The availability target is 99.9 percent and maximum latency is 600 milliseconds."
+            "checkout API receives 50 requests per second",
+            "2 replicas each processing 100 requests per second",
+            "baseline latency 100 ms",
+            "checkout API calls order service synchronously with 500 ms timeout and 2 retries exponential backoff",
+            "order service 2 replicas each processing 80 requests per second with baseline latency 200 ms",
+            "order service calls PostgreSQL synchronously with 300 ms timeout and 1 retry linear backoff",
+            "PostgreSQL database has 2 replicas each processing 120 requests per second with baseline latency 50 ms",
+            "availability target 99.9 percent",
+            "maximum latency target 600 ms"
           ]
         },
         "modelValidation": {
@@ -1201,12 +1921,16 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [
-            "The question does not specify which component 'it' refers to for failure."
+            "The question does not specify which component is referred to by 'it' in 'if it fails'"
           ],
           "assumptions": [
-            "The question is interpreted as asking about the failure of a component, but the specific component is not identified."
+            "The question is interpreted as asking about a component failure scenario",
+            "No specific component was identified, so it is ambiguous"
           ]
         },
         "result": {
@@ -1214,48 +1938,48 @@
           "scenarioType": "component_unavailable",
           "reason": "The scenario question is missing required information.",
           "missingInformation": [
-            "The question does not specify which component 'it' refers to for failure."
+            "The question does not specify which component is referred to by 'it' in 'if it fails'"
           ],
           "assumptions": []
         },
         "telemetry": {
-          "totalLatencyMs": 8600,
-          "totalInputTokens": 1324,
-          "totalOutputTokens": 515,
-          "totalTokens": 1839,
-          "totalEstimatedCostUsd": 0.0013536,
-          "estimatedCostPer1000RequestsUsd": 1.3536,
+          "totalLatencyMs": 6929,
+          "totalInputTokens": 1715,
+          "totalOutputTokens": 521,
+          "totalTokens": 2236,
+          "totalEstimatedCostUsd": 0.0015196,
+          "estimatedCostPer1000RequestsUsd": 1.5196,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 6541,
-              "inputTokens": 865,
-              "outputTokens": 434,
-              "totalTokens": 1299,
+              "latencyMs": 4915,
+              "inputTokens": 1090,
+              "outputTokens": 412,
+              "totalTokens": 1502,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000346,
-                "outputCostUsd": 0.0006944,
-                "totalCostUsd": 0.0010404,
-                "estimatedCostPer1000RequestsUsd": 1.0404,
+                "inputCostUsd": 0.000436,
+                "outputCostUsd": 0.0006592,
+                "totalCostUsd": 0.0010952,
+                "estimatedCostPer1000RequestsUsd": 1.0952,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2059,
-              "inputTokens": 459,
-              "outputTokens": 81,
-              "totalTokens": 540,
+              "latencyMs": 2014,
+              "inputTokens": 625,
+              "outputTokens": 109,
+              "totalTokens": 734,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001836,
-                "outputCostUsd": 0.0001296,
-                "totalCostUsd": 0.0003132,
-                "estimatedCostPer1000RequestsUsd": 0.3132,
+                "inputCostUsd": 0.00025,
+                "outputCostUsd": 0.0001744,
+                "totalCostUsd": 0.0004244,
+                "estimatedCostPer1000RequestsUsd": 0.4244,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -1276,17 +2000,17 @@
       "observedStatus": "ANSWERED",
       "observedScenarioType": "component_unavailable",
       "matchedExpectation": true,
-      "measuredWallClockMs": 5693,
+      "measuredWallClockMs": 5268,
       "response": {
         "status": "ANSWERED",
         "reason": null,
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "gateway service architecture",
+          "architectureName": "unknown",
           "services": [
             {
               "id": "gateway",
-              "name": "Gateway",
+              "name": "gateway",
               "replicas": 5,
               "capacityRpsPerReplica": 100,
               "baselineLatencyMs": 80
@@ -1301,18 +2025,18 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "replicas count corrected to 5 based on later statement",
-            "dependencies and retries are not mentioned, assumed none",
-            "call type assumptions not applicable"
+            "replicas refers to gateway replicas"
           ],
           "missingInformation": [
-            "role and type of gateway unclear",
-            "specific call dependencies of gateway are missing",
-            "retry policy information missing"
+            "clarity on the meaning of 'The gateway has 2 replicas' versus 'The same gateway also has 5 replicas'",
+            "architecture name",
+            "other components beyond gateway",
+            "dependencies"
           ],
           "sourceEvidence": [
-            "The gateway receives 30 requests per second.",
-            "The gateway has 2 replicas. The same gateway also has 5 replicas.",
+            "A gateway receives 30 requests per second.",
+            "The gateway has 2 replicas.",
+            "The same gateway also has 5 replicas.",
             "Each replica can process 100 requests per second.",
             "Its baseline latency is 80 milliseconds."
           ]
@@ -1329,11 +2053,13 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "The question refers to the component with id 'gateway' in availableComponents.",
-            "No additional context about dependencies or system architecture is provided."
+            "The question explicitly refers to the component 'gateway', which is available in the list provided."
           ]
         },
         "result": {
@@ -1345,49 +2071,48 @@
           ],
           "assumptions": [
             "Only required synchronous dependencies propagate unavailability.",
-            "The question refers to the component with id 'gateway' in availableComponents.",
-            "No additional context about dependencies or system architecture is provided."
+            "The question explicitly refers to the component 'gateway', which is available in the list provided."
           ],
           "explanation": "Component \"gateway\" is unavailable. The affected component list was calculated by traversing required synchronous dependencies in reverse."
         },
         "telemetry": {
-          "totalLatencyMs": 5692,
-          "totalInputTokens": 1177,
-          "totalOutputTokens": 260,
-          "totalTokens": 1437,
-          "totalEstimatedCostUsd": 0.0008868,
-          "estimatedCostPer1000RequestsUsd": 0.8868,
+          "totalLatencyMs": 5268,
+          "totalInputTokens": 1568,
+          "totalOutputTokens": 266,
+          "totalTokens": 1834,
+          "totalEstimatedCostUsd": 0.0010528,
+          "estimatedCostPer1000RequestsUsd": 1.0528,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 2766,
-              "inputTokens": 750,
-              "outputTokens": 189,
-              "totalTokens": 939,
+              "latencyMs": 3680,
+              "inputTokens": 975,
+              "outputTokens": 182,
+              "totalTokens": 1157,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0003,
-                "outputCostUsd": 0.0003024,
-                "totalCostUsd": 0.0006024,
-                "estimatedCostPer1000RequestsUsd": 0.6024,
+                "inputCostUsd": 0.00039,
+                "outputCostUsd": 0.0002912,
+                "totalCostUsd": 0.0006812,
+                "estimatedCostPer1000RequestsUsd": 0.6812,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2926,
-              "inputTokens": 427,
-              "outputTokens": 71,
-              "totalTokens": 498,
+              "latencyMs": 1587,
+              "inputTokens": 593,
+              "outputTokens": 84,
+              "totalTokens": 677,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001708,
-                "outputCostUsd": 0.0001136,
-                "totalCostUsd": 0.0002844,
-                "estimatedCostPer1000RequestsUsd": 0.2844,
+                "inputCostUsd": 0.0002372,
+                "outputCostUsd": 0.0001344,
+                "totalCostUsd": 0.0003716,
+                "estimatedCostPer1000RequestsUsd": 0.3716,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -1409,7 +2134,7 @@
       "observedStatus": "ANSWERED",
       "observedScenarioType": "component_unavailable",
       "matchedExpectation": true,
-      "measuredWallClockMs": 6721,
+      "measuredWallClockMs": 5918,
       "response": {
         "status": "ANSWERED",
         "reason": null,
@@ -1442,8 +2167,9 @@
               "timeoutMs": 400,
               "retryPolicy": {
                 "maxRetries": 1,
-                "backoff": "none"
-              }
+                "backoff": "fixed"
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 60,
@@ -1453,12 +2179,14 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "retry backoff linear interpreted as none due to unrecognized value"
+            "backoff type 'linear' interpreted as 'fixed'",
+            "dependency call type assumed as sync as explicitly stated",
+            "dependency required flag assumed true as explicitly stated"
           ],
           "missingInformation": [
-            "exact meaning of backoff=linear",
-            "capacity definition details",
-            "whether billing dependency is required explicitly stated as true"
+            "capacity of billing service under load",
+            "maximum latency target",
+            "minimum throughput target"
           ],
           "sourceEvidence": [
             "traffic = 60 rps",
@@ -1471,13 +2199,7 @@
         "modelValidation": {
           "isValid": true,
           "errors": [],
-          "warnings": [
-            {
-              "code": "RETRIES_WITHOUT_BACKOFF",
-              "message": "Dependency \"api\" to \"billing\" retries without backoff.",
-              "path": "api->billing"
-            }
-          ],
+          "warnings": [],
           "missingInformation": []
         },
         "scenario": {
@@ -1486,10 +2208,14 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "The question asks about the unavailability of a component, which aligns with component_unavailable scenario type."
+            "The question refers to the 'billing' component by its exact id as provided in availableComponents.",
+            "The scenario type corresponds to a component becoming unavailable, classified as 'component_unavailable'."
           ]
         },
         "result": {
@@ -1502,48 +2228,49 @@
           ],
           "assumptions": [
             "Only required synchronous dependencies propagate unavailability.",
-            "The question asks about the unavailability of a component, which aligns with component_unavailable scenario type."
+            "The question refers to the 'billing' component by its exact id as provided in availableComponents.",
+            "The scenario type corresponds to a component becoming unavailable, classified as 'component_unavailable'."
           ],
           "explanation": "Component \"billing\" is unavailable. The affected component list was calculated by traversing required synchronous dependencies in reverse."
         },
         "telemetry": {
-          "totalLatencyMs": 6721,
-          "totalInputTokens": 1218,
-          "totalOutputTokens": 330,
-          "totalTokens": 1548,
-          "totalEstimatedCostUsd": 0.0010152,
-          "estimatedCostPer1000RequestsUsd": 1.0152,
+          "totalLatencyMs": 5917,
+          "totalInputTokens": 1609,
+          "totalOutputTokens": 385,
+          "totalTokens": 1994,
+          "totalEstimatedCostUsd": 0.0012596,
+          "estimatedCostPer1000RequestsUsd": 1.2596,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 4655,
-              "inputTokens": 780,
-              "outputTokens": 265,
-              "totalTokens": 1045,
+              "latencyMs": 2254,
+              "inputTokens": 1005,
+              "outputTokens": 283,
+              "totalTokens": 1288,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000312,
-                "outputCostUsd": 0.000424,
-                "totalCostUsd": 0.000736,
-                "estimatedCostPer1000RequestsUsd": 0.736,
+                "inputCostUsd": 0.000402,
+                "outputCostUsd": 0.0004528,
+                "totalCostUsd": 0.0008548,
+                "estimatedCostPer1000RequestsUsd": 0.8548,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2065,
-              "inputTokens": 438,
-              "outputTokens": 65,
-              "totalTokens": 503,
+              "latencyMs": 3663,
+              "inputTokens": 604,
+              "outputTokens": 102,
+              "totalTokens": 706,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001752,
-                "outputCostUsd": 0.000104,
-                "totalCostUsd": 0.0002792,
-                "estimatedCostPer1000RequestsUsd": 0.2792,
+                "inputCostUsd": 0.0002416,
+                "outputCostUsd": 0.0001632,
+                "totalCostUsd": 0.0004048,
+                "estimatedCostPer1000RequestsUsd": 0.4048,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -1565,13 +2292,13 @@
       "observedStatus": "ANSWERED",
       "observedScenarioType": "load_multiplication",
       "matchedExpectation": true,
-      "measuredWallClockMs": 6808,
+      "measuredWallClockMs": 11634,
       "response": {
         "status": "ANSWERED",
         "reason": null,
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "gateway-payment-system",
+          "architectureName": "simple-gateway-payment",
           "services": [
             {
               "id": "gateway",
@@ -1599,7 +2326,8 @@
               "retryPolicy": {
                 "maxRetries": 2,
                 "backoff": "exponential"
-              }
+              },
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 40,
@@ -1608,14 +2336,17 @@
             "maximumLatencyMs": null,
             "minimumThroughputRps": null
           },
-          "assumptions": [],
+          "assumptions": [
+            "dependency callType is sync as explicitly stated",
+            "dependency is required as no alternative stated"
+          ],
           "missingInformation": [
-            "service level targets such as availability and maximum latency",
-            "capacity utilization levels",
-            "whether other services or data stores exist"
+            "service availability targets",
+            "service scaling policies",
+            "circuit breaker presence or absence"
           ],
           "sourceEvidence": [
-            "The gateway receives 40 requests per second.",
+            "A gateway receives 40 requests per second.",
             "The gateway has 1 replica that can process 100 requests per second and its baseline latency is 50 milliseconds.",
             "It synchronously calls a payment service with a 300 millisecond timeout and retries twice using exponential backoff.",
             "The payment service has 1 replica that can process 100 requests per second and its baseline latency is 100 milliseconds."
@@ -1644,10 +2375,14 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": 2,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "The question refers to increasing the incoming load (traffic) to the gateway component."
+            "The question refers to the load on the gateway component.",
+            "No circuit breakers are involved in the scenario."
           ]
         },
         "result": {
@@ -1681,48 +2416,49 @@
             "Each dependency produces one downstream call per upstream request.",
             "Retry attempts amplify downstream load.",
             "Loads from multiple upstream paths are added together.",
-            "The question refers to increasing the incoming load (traffic) to the gateway component."
+            "The question refers to the load on the gateway component.",
+            "No circuit breakers are involved in the scenario."
           ],
           "explanation": "The multiplied load was propagated through the dependency graph and compared with the deterministic capacity of each component."
         },
         "telemetry": {
-          "totalLatencyMs": 6808,
-          "totalInputTokens": 1228,
-          "totalOutputTokens": 327,
-          "totalTokens": 1555,
-          "totalEstimatedCostUsd": 0.0010144,
-          "estimatedCostPer1000RequestsUsd": 1.0144,
+          "totalLatencyMs": 11634,
+          "totalInputTokens": 1619,
+          "totalOutputTokens": 370,
+          "totalTokens": 1989,
+          "totalEstimatedCostUsd": 0.0012396,
+          "estimatedCostPer1000RequestsUsd": 1.2396,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 4898,
-              "inputTokens": 785,
-              "outputTokens": 265,
-              "totalTokens": 1050,
+              "latencyMs": 6901,
+              "inputTokens": 1010,
+              "outputTokens": 283,
+              "totalTokens": 1293,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000314,
-                "outputCostUsd": 0.000424,
-                "totalCostUsd": 0.000738,
-                "estimatedCostPer1000RequestsUsd": 0.738,
+                "inputCostUsd": 0.000404,
+                "outputCostUsd": 0.0004528,
+                "totalCostUsd": 0.0008568,
+                "estimatedCostPer1000RequestsUsd": 0.8568,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 1910,
-              "inputTokens": 443,
-              "outputTokens": 62,
-              "totalTokens": 505,
+              "latencyMs": 4732,
+              "inputTokens": 609,
+              "outputTokens": 87,
+              "totalTokens": 696,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0001772,
-                "outputCostUsd": 0.0000992,
-                "totalCostUsd": 0.0002764,
-                "estimatedCostPer1000RequestsUsd": 0.2764,
+                "inputCostUsd": 0.0002436,
+                "outputCostUsd": 0.0001392,
+                "totalCostUsd": 0.0003828,
+                "estimatedCostPer1000RequestsUsd": 0.3828,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -1744,24 +2480,24 @@
       "observedStatus": "ANSWERED",
       "observedScenarioType": "component_unavailable",
       "matchedExpectation": true,
-      "measuredWallClockMs": 5391,
+      "measuredWallClockMs": 11728,
       "response": {
         "status": "ANSWERED",
         "reason": null,
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "email-api-with-async-queue",
+          "architectureName": "email-api-with-message-queue",
           "services": [
             {
               "id": "email-api",
-              "name": "email API",
+              "name": "Email API",
               "replicas": 2,
               "capacityRpsPerReplica": 100,
               "baselineLatencyMs": 40
             },
             {
               "id": "message-queue",
-              "name": "message queue",
+              "name": "Message Queue",
               "replicas": 2,
               "capacityRpsPerReplica": 200,
               "baselineLatencyMs": 20
@@ -1775,7 +2511,8 @@
               "callType": "async",
               "required": false,
               "timeoutMs": null,
-              "retryPolicy": null
+              "retryPolicy": null,
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 20,
@@ -1785,18 +2522,19 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "dependency call type assumed async as explicitly stated",
-            "dependency required flag set to false as queue is not required for API request completion"
+            "call type for dependency is async as stated",
+            "dependency is not required as stated"
           ],
           "missingInformation": [
-            "timeout for message queue dependency",
-            "retry policy for message queue dependency"
+            "timeouts for message queue dependency",
+            "retry policy for message queue dependency",
+            "circuit breaker details for message queue dependency"
           ],
           "sourceEvidence": [
             "email API receives 20 requests per second",
-            "email API has 2 replicas, each can process 100 rps, baseline latency 40 ms",
+            "email API has 2 replicas, each handles 100 RPS, 40 ms latency",
             "email API sends events asynchronously to message queue",
-            "message queue has 2 replicas, each can process 200 rps, baseline latency 20 ms",
+            "message queue has 2 replicas, each handles 200 RPS, 20 ms latency",
             "asynchronous queue is not required for API request to complete"
           ]
         },
@@ -1818,10 +2556,13 @@
           "newLatencyMs": null,
           "latencyMultiplier": null,
           "loadMultiplier": null,
+          "circuitBreakerFrom": null,
+          "circuitBreakerTo": null,
+          "circuitBreakerState": null,
           "unsupportedReason": null,
           "missingInformation": [],
           "assumptions": [
-            "The question refers to the component with id 'message-queue' from the available components."
+            "The message queue identified as 'message-queue' is the component referred to in the question."
           ]
         },
         "result": {
@@ -1833,48 +2574,48 @@
           ],
           "assumptions": [
             "Only required synchronous dependencies propagate unavailability.",
-            "The question refers to the component with id 'message-queue' from the available components."
+            "The message queue identified as 'message-queue' is the component referred to in the question."
           ],
           "explanation": "Component \"message-queue\" is unavailable. The affected component list was calculated by traversing required synchronous dependencies in reverse."
         },
         "telemetry": {
-          "totalLatencyMs": 5390,
-          "totalInputTokens": 1238,
-          "totalOutputTokens": 339,
-          "totalTokens": 1577,
-          "totalEstimatedCostUsd": 0.0010376,
-          "estimatedCostPer1000RequestsUsd": 1.0376,
+          "totalLatencyMs": 11728,
+          "totalInputTokens": 1629,
+          "totalOutputTokens": 362,
+          "totalTokens": 1991,
+          "totalEstimatedCostUsd": 0.0012308,
+          "estimatedCostPer1000RequestsUsd": 1.2308,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 2954,
-              "inputTokens": 793,
-              "outputTokens": 274,
-              "totalTokens": 1067,
+              "latencyMs": 8092,
+              "inputTokens": 1018,
+              "outputTokens": 275,
+              "totalTokens": 1293,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0003172,
-                "outputCostUsd": 0.0004384,
-                "totalCostUsd": 0.0007556,
-                "estimatedCostPer1000RequestsUsd": 0.7556,
+                "inputCostUsd": 0.0004072,
+                "outputCostUsd": 0.00044,
+                "totalCostUsd": 0.0008472,
+                "estimatedCostPer1000RequestsUsd": 0.8472,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
             "scenarioInterpretation": {
-              "latencyMs": 2435,
-              "inputTokens": 445,
-              "outputTokens": 65,
-              "totalTokens": 510,
+              "latencyMs": 3636,
+              "inputTokens": 611,
+              "outputTokens": 87,
+              "totalTokens": 698,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.000178,
-                "outputCostUsd": 0.000104,
-                "totalCostUsd": 0.000282,
-                "estimatedCostPer1000RequestsUsd": 0.282,
+                "inputCostUsd": 0.0002444,
+                "outputCostUsd": 0.0001392,
+                "totalCostUsd": 0.0003836,
+                "estimatedCostPer1000RequestsUsd": 0.3836,
                 "pricingVerifiedOn": "2026-09-02"
               }
             }
@@ -1894,13 +2635,13 @@
       "observedStatus": "NOT_ANSWERABLE",
       "observedScenarioType": null,
       "matchedExpectation": true,
-      "measuredWallClockMs": 4259,
+      "measuredWallClockMs": 8290,
       "response": {
         "status": "NOT_ANSWERABLE",
         "reason": "The architecture model contains semantic errors and cannot be simulated safely.",
         "model": {
           "modelVersion": "1.0",
-          "architectureName": "mutual-call-between-service-a-and-b",
+          "architectureName": "service-a-b-synchronous-calls",
           "services": [
             {
               "id": "service-a",
@@ -1925,7 +2666,8 @@
               "callType": "sync",
               "required": true,
               "timeoutMs": 300,
-              "retryPolicy": null
+              "retryPolicy": null,
+              "circuitBreaker": null
             },
             {
               "from": "service-b",
@@ -1933,7 +2675,8 @@
               "callType": "sync",
               "required": true,
               "timeoutMs": 300,
-              "retryPolicy": null
+              "retryPolicy": null,
+              "circuitBreaker": null
             }
           ],
           "incomingLoadRps": 10,
@@ -1943,20 +2686,22 @@
             "minimumThroughputRps": null
           },
           "assumptions": [
-            "dependency callType 'sync' used as stated",
-            "dependencies are required calls as no optionality was mentioned"
+            "dependencies are synchronous by description",
+            "dependencies are required by default"
           ],
           "missingInformation": [
             "availability targets",
             "maximum latency targets",
-            "minimum throughput targets"
+            "minimum throughput targets",
+            "retry policies",
+            "circuit breaker configurations"
           ],
           "sourceEvidence": [
-            "Service A receives 10 requests per second",
-            "Service A has 2 replicas, capacity of 100 requests per second per replica, and baseline latency of 50 milliseconds",
-            "Service B has 2 replicas, capacity of 100 requests per second per replica, and baseline latency of 60 milliseconds",
-            "Service A synchronously calls Service B with a 300 millisecond timeout and no retries",
-            "Service B synchronously calls Service A with a 300 millisecond timeout and no retries"
+            "Service A receives 10 requests per second.",
+            "Service A has 2 replicas, capacity of 100 requests per second per replica, and baseline latency of 50 milliseconds.",
+            "Service B has 2 replicas, capacity of 100 requests per second per replica, and baseline latency of 60 milliseconds.",
+            "Service A synchronously calls Service B with a 300 millisecond timeout and no retries.",
+            "Service B synchronously calls Service A with a 300 millisecond timeout and no retries."
           ]
         },
         "modelValidation": {
@@ -1985,27 +2730,27 @@
         "scenario": null,
         "result": null,
         "telemetry": {
-          "totalLatencyMs": 4258,
-          "totalInputTokens": 802,
-          "totalOutputTokens": 319,
-          "totalTokens": 1121,
-          "totalEstimatedCostUsd": 0.0008312,
-          "estimatedCostPer1000RequestsUsd": 0.8312,
+          "totalLatencyMs": 8290,
+          "totalInputTokens": 1027,
+          "totalOutputTokens": 330,
+          "totalTokens": 1357,
+          "totalEstimatedCostUsd": 0.0009388,
+          "estimatedCostPer1000RequestsUsd": 0.9388,
           "currency": "USD",
           "calls": {
             "architectureExtraction": {
-              "latencyMs": 4258,
-              "inputTokens": 802,
-              "outputTokens": 319,
-              "totalTokens": 1121,
+              "latencyMs": 8290,
+              "inputTokens": 1027,
+              "outputTokens": 330,
+              "totalTokens": 1357,
               "cost": {
                 "model": "gpt-4.1-mini",
                 "deploymentType": "GlobalStandard",
                 "currency": "USD",
-                "inputCostUsd": 0.0003208,
-                "outputCostUsd": 0.0005104,
-                "totalCostUsd": 0.0008312,
-                "estimatedCostPer1000RequestsUsd": 0.8312,
+                "inputCostUsd": 0.0004108,
+                "outputCostUsd": 0.000528,
+                "totalCostUsd": 0.0009388,
+                "estimatedCostPer1000RequestsUsd": 0.9388,
                 "pricingVerifiedOn": "2026-09-02"
               }
             },
