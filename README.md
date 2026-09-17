@@ -121,7 +121,7 @@ The repository defines **15 live validation cases** covering supported scenarios
 
 ## Status and limits
 
-This is a working, single-user demonstration with four supported scenario categories and a formal model limited to small graphs (up to 15 components). Calculations assume steady-state conditions. It does not model queue depth, probabilistic traffic, regional failover, or recovery over time; declared availability targets are not measured availability. Local JSON storage is intended for one application instance. Authentication, authorization, tenant isolation, and concurrency controls would be needed before shared production use. See [NOT_DONE.md](NOT_DONE.md) for the current boundaries and possible evolution, and [DECISIONS.md](DECISIONS.md) for architectural tradeoffs.
+This is a working, single-user demonstration with four supported scenario categories and a formal model limited to small graphs (up to 15 components). Calculations assume steady-state conditions. It does not model queue depth, probabilistic traffic, regional failover, or recovery over time; declared availability targets are not measured availability. Local JSON storage is intended for one application instance. Authentication, authorization, tenant isolation, and concurrency controls would be needed before shared production use. See [LIMITATIONS.md](LIMITATIONS.md) for the current boundaries and possible evolution, and [DECISIONS.md](DECISIONS.md) for architectural tradeoffs.
 
 ## Why this project matters
 
