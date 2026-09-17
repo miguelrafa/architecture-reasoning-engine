@@ -126,3 +126,7 @@ This is a working, single-user demonstration with four supported scenario catego
 ## Why this project matters
 
 The project demonstrates how to put a clear boundary around AI-assisted architecture reasoning: use a model to interpret flexible language, then require explicit data, validation, and deterministic code for claims about system behavior. Its formal model, visible assumptions, refusals, and focused validation make each supported answer easier to inspect and challenge.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
