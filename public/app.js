@@ -38,6 +38,12 @@ const resultStatus = document.querySelector('#result-status');
 const resultExplanation = document.querySelector(
   '#result-explanation'
 );
+const missingInformationSection = document.querySelector(
+  '#missing-information-section'
+);
+const missingInformationList = document.querySelector(
+  '#missing-information'
+);
 const rootCause = document.querySelector('#root-cause');
 const affectedComponents = document.querySelector(
   '#affected-components'
@@ -514,6 +520,9 @@ function renderStoredModelInspection(storedModel) {
     `Stored architecture version ${storedModel.version} was loaded for ` +
     'inspection. Enter a what-if question to analyze this exact version.';
 
+  missingInformationList.replaceChildren();
+  missingInformationSection.hidden = true;
+
   rootCause.textContent = 'Not applicable';
 
   renderList(
@@ -576,6 +585,23 @@ function renderAnalysis(payload) {
     computedResult.explanation ??
     payload.reason ??
     'The request was processed without a textual explanation.';
+
+  const missingInformation = computedResult.missingInformation;
+  const missingItems = (
+    Array.isArray(missingInformation)
+      ? missingInformation
+      : typeof missingInformation === 'string'
+        ? [missingInformation]
+        : []
+  ).filter((item) => typeof item === 'string' && item.trim() !== '');
+
+  missingInformationList.replaceChildren();
+  missingInformationSection.hidden =
+    status !== 'NOT_ANSWERABLE' || missingItems.length === 0;
+
+  if (!missingInformationSection.hidden) {
+    renderList(missingInformationList, missingItems, '');
+  }
 
   rootCause.textContent =
     computedResult.rootCause ??

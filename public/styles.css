@@ -270,6 +270,14 @@ textarea::placeholder {
   line-height: 1.7;
 }
 
+.refusal-details {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid #fedf89;
+  border-radius: 10px;
+  background: var(--warning-background);
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: minmax(180px, 0.7fr) minmax(240px, 1.3fr);
@@ -492,22 +500,22 @@ pre {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.65rem 0.75rem;
-  color: var(--text-color);
+  color: var(--text);
   font: inherit;
-  background-color: var(--surface-color);
-  border: 1px solid var(--border-color);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 0.4rem;
 }
 
 .selector-field select:focus {
-  border-color: var(--primary-color);
+  border-color: var(--primary);
   outline: 3px solid rgba(0, 120, 212, 0.15);
 }
 
 .selector-field select:disabled {
-  color: var(--muted-color);
+  color: var(--text-muted);
   cursor: not-allowed;
-  background-color: var(--background-color);
+  background-color: var(--background);
 }
 
 .saved-model-panel .model-actions {

@@ -92,6 +92,12 @@
             state changes.
           </p>
 
+          <p class="field-help">
+            Live analysis requires your own configured Microsoft Foundry
+            deployment. Loading an example only fills the form; submitting it
+            invokes Foundry.
+          </p>
+
           <div class="form-actions">
             <button id="analyze-button" class="primary-button" type="submit">
               Analyze new architecture
@@ -221,6 +227,11 @@
           <h3>Answer</h3>
 
           <p id="result-explanation" class="result-explanation"></p>
+
+          <div id="missing-information-section" class="refusal-details" hidden>
+            <h4>Missing information</h4>
+            <ul id="missing-information" class="compact-list"></ul>
+          </div>
 
           <div class="result-grid">
             <div>
