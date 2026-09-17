@@ -17,6 +17,12 @@ Architecture descriptions are often informal, while questions about failures, la
 - Save formal models as immutable local JSON versions, edit by creating a new version, and analyze a selected version without extracting its architecture again.
 - Show request latency, token usage, and a code-calculated cost estimate for Foundry calls.
 
+## Example output
+
+This screenshot shows analysis of a previously saved formal model. Microsoft Foundry interpreted the natural-language question as a component-unavailability scenario; deterministic application code then calculated the affected components by traversing required synchronous dependencies. The interface also shows assumptions, latency, token usage, and estimated request cost. The displayed telemetry belongs to this recorded request and can vary between executions.
+
+![Successful deterministic dependency-impact result with affected components, visible assumptions, latency, token usage, and estimated request cost](docs/images/analysis-result.png)
+
 ## Architecture and workflow
 
 ```mermaid
